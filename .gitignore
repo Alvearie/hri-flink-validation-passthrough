@@ -1,0 +1,15 @@
+# Ignore IntelliJ files
+.idea
+.iml
+out/
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+/test/test.iml
+hri-flink-validation-passthrough.iml
+.DS_Store
+test/.DS_Store
+test/dependencies

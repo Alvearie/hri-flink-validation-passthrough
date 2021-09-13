@@ -1,0 +1,182 @@
+
+plugins {
+    id 'java'
+    id 'application'
+    // shadow plugin to produce fat JARs
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'maven-publish'
+    id 'jacoco'
+}
+
+allprojects {
+    group = 'org.alvearie.hri.flink'
+    version = '2.1-1.0.1'
+    description = """Flink Passthrough Validation Job"""
+    applicationDefaultJvmArgs = ["-Dlog4j.configuration=log4j.properties"]
+    mainClassName = 'org.alvearie.hri.flink.PassthroughStreamingJob'
+
+    ext {
+        pipelineCoreVersion = '2.1-1.0.1'
+        javaVersion = '1.8'
+        flinkVersion = '1.10.0'
+        scalaBinaryVersion = '2.12'
+        scalaVersion = '2.12.11'
+        scalaTestVersion = '3.1.1'
+        slf4jVersion = '1.7.7'
+        log4jVersion = '1.2.17'
+        jacksonVersion = '2.12.0'
+    }
+
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+
+    repositories {
+        ['TBD'].each { repo ->
+            maven {
+                credentials {
+                    username = findProperty('user') ?: System.getenv('user')
+                    password = findProperty('password') ?: System.getenv('password')
+                }
+
+                url "TBD/$repo/"
+            }
+        }
+        mavenCentral()
+        mavenLocal()
+    }
+
+    ext {
+        branch = System.getenv('TRAVIS_BRANCH') != null
+                ? System.getenv('TRAVIS_BRANCH')
+                : getWorkingBranch()
+    }
+
+    // If not running in travis add 'local' to the version to support local development
+    if (System.getenv('TRAVIS_BRANCH') == null || System.getenv('TRAVIS_BRANCH') == "") {
+        version = "${branch}-local-SNAPSHOT"
+    } else if (System.getenv('TRAVIS_TAG') == null || System.getenv('TRAVIS_TAG') == "") {
+        version = "${branch}-SNAPSHOT"
+    } else if (System.getenv('TRAVIS_TAG') == "v${version}") {
+        version = "${version}"
+    } else {
+        throw new InvalidUserDataException(String.format("The tag '%s' does not match with the current release version '%s'",System.getenv('TRAVIS_TAG'),"${version}"));
+    }
+}
+
+// NOTE: We cannot use "compileOnly" or "shadow" configurations since then we could not run code
+// in the IDE or with "gradle run". We also cannot exclude transitive dependencies from the
+// shadowJar yet (see https://github.com/johnrengelman/shadow/issues/159).
+// -> Explicitly define the // libraries we want to be included in the "flinkShadowJar" configuration!
+configurations {
+    flinkShadowJar // dependencies which go into the shadowJar
+
+    // always exclude these (also from transitive dependencies) since they are provided by Flink
+    flinkShadowJar.exclude group: 'org.apache.flink', module: 'force-shading'
+    flinkShadowJar.exclude group: 'com.google.code.findbugs', module: 'jsr305'
+    flinkShadowJar.exclude group: 'org.slf4j'
+    flinkShadowJar.exclude group: 'log4j'
+}
+
+// declare the dependencies for your production and test code
+dependencies {
+    implementation "org.apache.flink:flink-scala_${scalaBinaryVersion}:${flinkVersion}"
+    implementation "org.apache.flink:flink-streaming-scala_${scalaBinaryVersion}:${flinkVersion}"
+    implementation "org.apache.flink:flink-tests:${flinkVersion}:tests"
+    implementation "org.apache.flink:flink-test-utils_${scalaBinaryVersion}:${flinkVersion}"
+    implementation "log4j:log4j:${log4jVersion}"
+    implementation "org.slf4j:slf4j-log4j12:${slf4jVersion}"
+
+    // --------------------------------------------------------------
+    // Dependencies that should be part of the shadow jar, e.g.
+    // connectors. These must be in the flinkShadowJar configuration!
+    // --------------------------------------------------------------
+    flinkShadowJar "org.alvearie.hri.flink:hri-flink-pipeline-core:${pipelineCoreVersion}"
+    flinkShadowJar "info.picocli:picocli:4.2.0"
+
+
+    // Add test dependencies here.
+    flinkShadowJar "org.alvearie.hri.flink:hri-flink-pipeline-core:${pipelineCoreVersion}:tests"
+    testImplementation "junit:junit:4.12"
+    testImplementation "com.github.stefanbirkner:system-rules:1.19.0"
+}
+
+// make compileOnly dependencies available for tests:
+sourceSets {
+    main.compileClasspath += configurations.flinkShadowJar
+    main.runtimeClasspath += configurations.flinkShadowJar
+
+    test.compileClasspath += configurations.flinkShadowJar
+    test.runtimeClasspath += configurations.flinkShadowJar
+
+    javadoc.classpath += configurations.flinkShadowJar
+}
+
+run.classpath = sourceSets.main.runtimeClasspath
+
+jar {
+    manifest {
+        attributes 'Built-By': System.getProperty('user.name'),
+                'Build-Jdk': System.getProperty('java.version')
+        baseName = 'hri-flink-validation-passthrough'
+    }
+}
+
+shadowJar {
+    configurations = [project.configurations.flinkShadowJar]
+    baseName = 'hri-flink-validation-passthrough'
+    archiveClassifier.set('')
+}
+
+publishing {
+    publications {
+        shadow(MavenPublication) { publication ->
+            project.shadow.component(publication)
+            artifactId = 'hri-flink-validation-passthrough'
+        }
+    }
+
+    repositories {
+        maven {
+            url 'TBD'
+            credentials {
+                username findProperty('user') ?: ''
+                password findProperty('password') ?: ''
+            }
+        }
+    }
+}
+
+// this is for App Scan
+task copyDependencies(type: Copy) {
+   from configurations.flinkShadowJar 
+   into 'dependencies'
+}
+
+test {
+    finalizedBy jacocoTestReport // report is always generated after tests run
+}
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
+}
+jacocoTestReport.doLast {
+    println "Jacoco report:\n  file:///$buildDir/reports/jacoco/test/html/index.html"
+}
+
+
+/**
+ * Get the name of the working branch of the project
+ *
+ * @return Name of the working branch
+ */
+def getWorkingBranch() {
+    // Triple double-quotes for the breaklines
+    def workingBranch = """git --git-dir=${rootDir}/.git
+                               --work-tree=${rootDir}
+                               rev-parse --abbrev-ref HEAD""".execute().text.trim()
+    println "Working branch: " + workingBranch
+    return workingBranch
+}
+

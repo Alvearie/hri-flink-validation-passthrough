@@ -1,0 +1,21 @@
+plugins {
+    id 'maven-publish'
+}
+
+description = """Setup For Nightly Test Dependencies"""
+
+configurations {
+    nightlyTests
+}
+
+dependencies {
+    nightlyTests "org.alvearie.hri.flink:hri-hri-flink-validation-passthrough:${version}"
+}
+
+// The nightlyTests (test/nightly) push a hri-flink-validation-passthrough jar to flink. The tests run in a different build stage,
+// so the jar can not be copied from the build output. This task will get the jar from maven and copy it into the
+// "test/dependencies" directory
+task copyNightlyTestDependencies(type: Copy) {
+    from configurations.nightlyTests
+    into 'dependencies'
+}
