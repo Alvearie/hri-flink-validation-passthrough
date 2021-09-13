@@ -1,0 +1,17 @@
+source 'https://rubygems.org'
+
+#ruby=ruby-2.6.5
+ruby '2.6.5'
+
+gem 'rspec'
+gem 'rest-client'
+gem 'rspec_junit_formatter'
+gem 'httplog'
+gem 'net_http_ssl_fix'
+gem 'rspec-core'
+gem 'rspec-expectations'
+gem 'rspec-mocks'
+gem 'rspec-support'
+gem 'ruby-kafka'
+gem 'zstd-ruby'
+gem 'specific_install'
