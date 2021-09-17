@@ -1,6 +1,5 @@
 ## PR Requirements:
  - [ ] The code must be reviewed by at least one Maintainer
- - [ ] JIRA Ticket: https://issue-link/browse/JIRA_TICKET_HERE
- - [ ] 100 % tests passing
+ - [ ] JIRA Ticket: https://jira.wh-sdlc.watson-health.ibm.com/browse/JIRA_TICKET_HERE
  - [ ] 90 % test code coverage
- - [ ] Documentation is updated 
+ - [ ] README updates
