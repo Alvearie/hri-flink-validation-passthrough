@@ -35,7 +35,6 @@ allprojects {
 
     repositories {
         maven {
-            name = "GitHubPackages"
             credentials {
                 username = findProperty('ACCESS_TOKEN_USER') ?: System.getenv('ACCESS_TOKEN_USER')
                 password = findProperty('ACCESS_TOKEN_VALUE') ?: System.getenv('ACCESS_TOKEN_VALUE')

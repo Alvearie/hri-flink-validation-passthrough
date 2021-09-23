@@ -67,7 +67,7 @@ jobs:
       - name: Gradle Build
         run: |
           chmod +x ./gradlew
-          ./gradlew clean build shadowJar
+          ./gradlew clean build shadowJar --info
 
       - name: Run Smoke Tests
         run: ./run-smoketests.sh
