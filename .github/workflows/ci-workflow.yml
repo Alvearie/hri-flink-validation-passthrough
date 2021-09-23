@@ -49,8 +49,8 @@ jobs:
       - name: Install Java
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt'
-          java-version: '9.0.4'
+          distribution: 'adopt-hotspot'
+          java-version: '8'
 
       - name: Install Ruby 2.6.5
         uses: ruby/setup-ruby@v1
