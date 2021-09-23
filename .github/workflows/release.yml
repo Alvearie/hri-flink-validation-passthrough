@@ -2,14 +2,16 @@ name: CI Workflow
 
 on:
   push:
-    branches: [ '**' ]
+    tags: [ '**' ]
   workflow_dispatch:
 
 concurrency: ci-${{ github.ref }}
 
 jobs:
 
-  build-and-run-tests:
+
+
+  build:
     name: Build and Run Tests
     runs-on: ubuntu-latest
     env:
@@ -31,7 +33,7 @@ jobs:
       APPID_HRI_AUDIENCE: 21e7d376-9cdb-4a9d-a11f-9b76c007244d
       APPID_FLINK_AUDIENCE: a480b8ff-c7a2-4efd-948e-d0292fff8ffc
       IAM_CLOUD_URL: https://iam.cloud.ibm.com
-      ACTIONS_BRANCH:
+      ACTIONS_TAG:
 
       CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY }}
       SASL_PLAIN_PASSWORD: ${{ secrets.SASL_PLAIN_PASSWORD }}
@@ -79,15 +81,9 @@ jobs:
           gem specific_install -l https://github.com/Alvearie/hri-test-helpers.git main
           ./run-ivttests.sh
 
-       # - name: Run Nightly Tests
-       #   if: github.ref == 'refs/heads/develop'
-       #   run: |
-       #     ./gradlew copyNightlyTestDependencies
-       #     ./run-nightlytests.sh
-
   publish:
     name: Gradle Publish
-    needs: build-and-run-tests
+    needs: build
     if: ${{ github.ref == 'refs/heads/develop' }}
     runs-on: ubuntu-latest
 

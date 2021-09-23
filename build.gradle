@@ -56,12 +56,12 @@ allprojects {
     // If not running in travis add 'local' to the version to support local development
     if (System.getenv('BRANCH_NAME') == null || System.getenv('BRANCH_NAME') == "") {
         version = "${branch}-local-SNAPSHOT"
-    } else if (System.getenv('BRANCH_NAME') == null || System.getenv('BRANCH_NAME') == "") {
+    } else if (System.getenv('ACTIONS_TAG') == null || System.getenv('ACTIONS_TAG') == "") {
         version = "${branch}-SNAPSHOT"
-    } else if (System.getenv('BRANCH_NAME') == "v${version}") {
+    } else if (System.getenv('ACTIONS_TAG') == "v${version}") {
         version = "${version}"
     } else {
-        throw new InvalidUserDataException(String.format("The tag '%s' does not match with the current release version '%s'",System.getenv('TRAVIS_TAG'),"${version}"));
+        throw new InvalidUserDataException(String.format("The tag '%s' does not match with the current release version '%s'",System.getenv('ACTIONS_TAG'),"${version}"));
     }
 }
 
