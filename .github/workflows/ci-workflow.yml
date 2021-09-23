@@ -62,7 +62,9 @@ jobs:
         run: ./copyrightCheck.sh
 
       - name: Gradle Build
-        run: ./gradlew clean build shadowJar
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build shadowJar
 
       - name: Run Smoke Tests
         run: ./run-smoketests.sh
