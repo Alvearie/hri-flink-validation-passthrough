@@ -59,10 +59,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Copyright Check
-        run: |
-          pwd
-          ls
-          ./copyrightCheck
+        run: ./copyrightCheck.sh
 
       - name: Gradle Build
         run: ./gradlew clean build shadowJar
