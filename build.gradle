@@ -16,7 +16,7 @@ allprojects {
     mainClassName = 'org.alvearie.hri.flink.PassthroughStreamingJob'
 
     ext {
-        pipelineCoreVersion = 'develop-SNAPSHOT'
+        pipelineCoreVersion = 'WHFHRI-671-SNAPSHOT'
         javaVersion = '1.8'
         flinkVersion = '1.10.0'
         scalaBinaryVersion = '2.12'
@@ -34,15 +34,14 @@ allprojects {
     }
 
     repositories {
-        ['TBD'].each { repo ->
-            maven {
-                credentials {
-                    username = findProperty('user') ?: System.getenv('user')
-                    password = findProperty('password') ?: System.getenv('password')
-                }
-
-                url "TBD/$repo/"
+        maven {
+            name = "GitHubPackages"
+            credentials {
+                username = findProperty('github_user') ?: System.getenv('GITHUB_ACTOR')
+                password = findProperty('github_token') ?: System.getenv('GITHUB_TOKEN')
             }
+
+            url "https://maven.pkg.github.com/Alvearie/hri-flink-pipeline-core"
         }
         mavenCentral()
         mavenLocal()
@@ -140,10 +139,10 @@ publishing {
 
     repositories {
         maven {
-            url 'TBD'
+            url 'https://maven.pkg.github.com/Alvearie/hri-flink-validation-passthrough'
             credentials {
-                username findProperty('user') ?: ''
-                password findProperty('password') ?: ''
+                username findProperty('github_user') ?: System.getenv('GITHUB_ACTOR')
+                password findProperty('github_password') ?: System.getenv('GITHUB_TOKEN')
             }
         }
     }

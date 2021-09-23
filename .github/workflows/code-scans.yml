@@ -1,0 +1,35 @@
+name: Code Scans
+
+on:
+  push:
+    branches: [ 'main', 'develop', 'support-*' ]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency: code-scans-${{ github.ref }}
+
+jobs:
+  code-analysis:
+    name: Static Code Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # full checkout for SonarCloud analysis
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.15
+
+      - name: Unit Tests and Coverage
+        run: make test
+
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@v1.6
+        with:
+          projectBaseDir: ./src
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
