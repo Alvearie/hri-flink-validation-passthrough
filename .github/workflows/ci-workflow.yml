@@ -92,5 +92,6 @@ jobs:
       - name: Publish package
         run: gradle publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACCESS_TOKEN_USER: ${{ secrets.ACCESS_TOKEN_USER }}
+          ACCESS_TOKEN_VALUE: ${{ secrets.ACCESS_TOKEN_VALUE }}
 

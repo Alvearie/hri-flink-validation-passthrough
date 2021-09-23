@@ -37,8 +37,8 @@ allprojects {
         maven {
             name = "GitHubPackages"
             credentials {
-                username = findProperty('github_user') ?: System.getenv('GITHUB_ACTOR')
-                password = findProperty('github_token') ?: System.getenv('GITHUB_TOKEN')
+                username = findProperty('ACCESS_TOKEN_USER') ?: System.getenv('ACCESS_TOKEN_USER')
+                password = findProperty('ACCESS_TOKEN_VALUE') ?: System.getenv('ACCESS_TOKEN_VALUE')
             }
 
             url "https://maven.pkg.github.com/Alvearie/hri-flink-pipeline-core"
@@ -48,17 +48,17 @@ allprojects {
     }
 
     ext {
-        branch = System.getenv('TRAVIS_BRANCH') != null
-                ? System.getenv('TRAVIS_BRANCH')
+        branch = System.getenv('BRANCH_NAME') != null
+                ? System.getenv('BRANCH_NAME')
                 : getWorkingBranch()
     }
 
     // If not running in travis add 'local' to the version to support local development
-    if (System.getenv('TRAVIS_BRANCH') == null || System.getenv('TRAVIS_BRANCH') == "") {
+    if (System.getenv('BRANCH_NAME') == null || System.getenv('BRANCH_NAME') == "") {
         version = "${branch}-local-SNAPSHOT"
-    } else if (System.getenv('TRAVIS_TAG') == null || System.getenv('TRAVIS_TAG') == "") {
+    } else if (System.getenv('BRANCH_NAME') == null || System.getenv('BRANCH_NAME') == "") {
         version = "${branch}-SNAPSHOT"
-    } else if (System.getenv('TRAVIS_TAG') == "v${version}") {
+    } else if (System.getenv('BRANCH_NAME') == "v${version}") {
         version = "${version}"
     } else {
         throw new InvalidUserDataException(String.format("The tag '%s' does not match with the current release version '%s'",System.getenv('TRAVIS_TAG'),"${version}"));
@@ -141,8 +141,8 @@ publishing {
         maven {
             url 'https://maven.pkg.github.com/Alvearie/hri-flink-validation-passthrough'
             credentials {
-                username findProperty('github_user') ?: System.getenv('GITHUB_ACTOR')
-                password findProperty('github_password') ?: System.getenv('GITHUB_TOKEN')
+                username findProperty('ACCESS_TOKEN_USER') ?: System.getenv('ACCESS_TOKEN_USER')
+                password findProperty('ACCESS_TOKEN_VALUE') ?: System.getenv('ACCESS_TOKEN_VALUE')
             }
         }
     }
