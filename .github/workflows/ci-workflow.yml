@@ -36,8 +36,10 @@ jobs:
       SASL_PLAIN_PASSWORD: ${{ secrets.SASL_PLAIN_PASSWORD }}
       OIDC_HRI_INTERNAL_CLIENT_SECRET: ${{ secrets.OIDC_HRI_INTERNAL_CLIENT_SECRET }}
       OIDC_HRI_DATA_INTEGRATOR_CLIENT_SECRET: ${{ secrets.OIDC_HRI_DATA_INTEGRATOR_CLIENT_SECRET }}
-      ELASTIC_PASSWORD: ${{ secrets.ELASTIC_PASSWORD }}
       ELASTIC_USER: ${{ secrets.ELASTIC_USER }}
+      ELASTIC_PASSWORD: ${{ secrets.ELASTIC_PASSWORD }}
+      ACCESS_TOKEN_USER: ${{ secrets.ACCESS_TOKEN_USER }}
+      ACCESS_TOKEN_VALUE: ${{ secrets.ACCESS_TOKEN_VALUE }}
 
     steps:
       - name: Set Branch Name
@@ -91,7 +93,5 @@ jobs:
     steps:
       - name: Publish package
         run: gradle publish
-        env:
-          ACCESS_TOKEN_USER: ${{ secrets.ACCESS_TOKEN_USER }}
-          ACCESS_TOKEN_VALUE: ${{ secrets.ACCESS_TOKEN_VALUE }}
+
 
