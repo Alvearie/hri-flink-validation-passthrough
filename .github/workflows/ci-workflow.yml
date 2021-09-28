@@ -70,7 +70,9 @@ jobs:
           ./gradlew clean build shadowJar --info
 
       - name: Run Smoke Tests
-        run: ./run-smoketests.sh
+        run: |
+          chmod +x ./run-smoketests.sh
+          ./run-smoketests.sh
 
       - name: Install Ruby Gems, Run IVT
         run: |
