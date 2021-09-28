@@ -9,11 +9,11 @@ describe 'Flink Validation Passthrough Job' do
   before(:all) do
     TENANT_ID = 'test'
     BATCH_COMPLETION_DELAY = 5000
-    @travis_branch = ENV['TRAVIS_BRANCH']
+    @git_branch = ENV['BRANCH_NAME']
     @flink_helper = HRITestHelpers::FlinkHelper.new(ENV['FLINK_URL'])
     @event_streams_helper = HRITestHelpers::EventStreamsHelper.new
     @iam_token = HRITestHelpers::IAMHelper.new(ENV['IAM_CLOUD_URL']).get_access_token(ENV['CLOUD_API_KEY'])
-    @appid_helper = HRITestHelpers::AppIDHelper.new(ENV['APPID_URL'], ENV['APPID_TENANT'], @iam_token, ENV['JWT_AUDIENCE_ID'])
+    @appid_helper = HRITestHelpers::AppIDHelper.new(ENV['APPID_URL'], ENV['APPID_TENANT'], @iam_token, nil)
     @flink_api_oauth_token = @appid_helper.get_access_token('hri_integration_tenant_test_data_integrator', '', ENV['APPID_FLINK_AUDIENCE'])
     @hri_oauth_token = @appid_helper.get_access_token('hri_integration_tenant_test_data_integrator', 'tenant_test hri_data_integrator', ENV['APPID_HRI_AUDIENCE'])
     @mgmt_api_helper = HRITestHelpers::MgmtAPIHelper.new(ENV['HRI_INGRESS_URL'], @iam_token)
@@ -21,10 +21,10 @@ describe 'Flink Validation Passthrough Job' do
     @record_validator = KafkaRecordValidator.new
 
     timestamp = Time.now.to_i
-    @input_topic = ENV['INPUT_TOPIC'].gsub('.in', "-#{@travis_branch}-#{timestamp}.in")
-    @output_topic = ENV['OUTPUT_TOPIC'].gsub('.out', "-#{@travis_branch}-#{timestamp}.out")
-    @notification_topic = ENV['NOTIFICATION_TOPIC'].gsub('.notification', "-#{@travis_branch}-#{timestamp}.notification")
-    @invalid_topic = ENV['INVALID_TOPIC'].gsub('.invalid', "-#{@travis_branch}-#{timestamp}.invalid")
+    @input_topic = ENV['INPUT_TOPIC'].gsub('.in', "-#{@git_branch}-#{timestamp}.in")
+    @output_topic = ENV['OUTPUT_TOPIC'].gsub('.out', "-#{@git_branch}-#{timestamp}.out")
+    @notification_topic = ENV['NOTIFICATION_TOPIC'].gsub('.notification', "-#{@git_branch}-#{timestamp}.notification")
+    @invalid_topic = ENV['INVALID_TOPIC'].gsub('.invalid', "-#{@git_branch}-#{timestamp}.invalid")
     @event_streams_helper.create_topic(@input_topic, 1)
     @event_streams_helper.create_topic(@output_topic, 1)
     @event_streams_helper.create_topic(@notification_topic, 1)
@@ -32,13 +32,13 @@ describe 'Flink Validation Passthrough Job' do
     @event_streams_helper.verify_topic_creation([@input_topic, @output_topic, @notification_topic, @invalid_topic])
 
     @kafka_notification_builder = KafkaNotificationBuilder.new
-    @output_consumer_group = "hri-flink-validation-passthrough-#{@travis_branch}-#{timestamp}-output-consumer"
-    @notification_consumer_group = "hri-flink-validation-passthrough-#{@travis_branch}-#{timestamp}-notification-consumer"
-    @invalid_consumer_group = "hri-flink-validation-passthrough-#{@travis_branch}-#{timestamp}-invalid-consumer"
-    @kafka = Kafka.new(ENV['KAFKA_BROKERS'], client_id: "hri-flink-validation-passthrough-#{@travis_branch}-#{timestamp}", connect_timeout: 10, socket_timeout: 10, sasl_plain_username: 'token', sasl_plain_password: ENV['SASL_PLAIN_PASSWORD'], ssl_ca_certs_from_system: true)
+    @output_consumer_group = "hri-flink-validation-passthrough-#{@git_branch}-#{timestamp}-output-consumer"
+    @notification_consumer_group = "hri-flink-validation-passthrough-#{@git_branch}-#{timestamp}-notification-consumer"
+    @invalid_consumer_group = "hri-flink-validation-passthrough-#{@git_branch}-#{timestamp}-invalid-consumer"
+    @kafka = Kafka.new(ENV['KAFKA_BROKERS'], client_id: "hri-flink-validation-passthrough-#{@git_branch}-#{timestamp}", connect_timeout: 10, socket_timeout: 10, sasl_plain_username: 'token', sasl_plain_password: ENV['SASL_PLAIN_PASSWORD'], ssl_ca_certs_from_system: true)
 
     #Upload Jar File
-    @test_jar_id = @flink_helper.upload_jar_from_dir("hri-flink-validation-passthrough-#{ENV['TRAVIS_BRANCH']}.jar", File.join(File.dirname(__FILE__), '../../build/libs/'), @flink_api_oauth_token, /hri-flink-validation-passthrough-.+.jar/)
+    @test_jar_id = @flink_helper.upload_jar_from_dir("hri-flink-validation-passthrough-#{@git_branch}.jar", File.join(File.dirname(__FILE__), '../../build/libs/'), @flink_api_oauth_token, /hri-flink-validation-passthrough-.+.jar/)
 
     #Start Job
     @flink_job = FlinkJob.new(@flink_helper, @event_streams_helper, @kafka, @test_jar_id, TENANT_ID)
@@ -85,7 +85,7 @@ describe 'Flink Validation Passthrough Job' do
         @flink_helper.verify_jar_deleted(@test_jar_id, @flink_api_oauth_token)
       end
 
-      response = @elastic.es_delete_by_query(TENANT_ID, "name:hri-flink-validation-passthrough-#{ENV['TRAVIS_BRANCH']}*")
+      response = @elastic.es_delete_by_query(TENANT_ID, "name:hri-flink-validation-passthrough-#{@git_branch}*")
       response.nil? ? (raise 'Elastic batch delete did not return a response') : (raise 'Failed to delete Elastic batches' unless response.code == 200)
       Logger.new(STDOUT).info("Delete test batches by query response #{response.body}")
     ensure
@@ -98,7 +98,7 @@ describe 'Flink Validation Passthrough Job' do
 
   it 'should output all records with the same key, headers, and body without validation' do
     batch_info = {
-      batch_name: "hri-flink-validation-passthrough-#{ENV['TRAVIS_BRANCH']}-valid-batch-БВГДЖЗИЙЛ",
+      batch_name: "hri-flink-validation-passthrough-#{@git_branch}-valid-batch-БВГДЖЗИЙЛ",
       batch_data_type: 'hri-flink-validation-passthrough-batch-あいうえおか',
       batch_metadata: 'ᚠᛇᚻ᛫ᛒᛦᚦ᛫ᚠᚱᚩᚠᚢᚱ'
     }
@@ -136,7 +136,7 @@ describe 'Flink Validation Passthrough Job' do
         expectedRecordCount: 15
     }
     batch_template = {
-        name: "hri-flink-validation-passthrough-#{ENV['TRAVIS_BRANCH']}-valid-batch-name",
+        name: "hri-flink-validation-passthrough-#{@git_branch}-valid-batch-name",
         dataType: 'hri-flink-validation-passthrough-batch',
         topic: @input_topic
     }
@@ -228,7 +228,7 @@ describe 'Flink Validation Passthrough Job' do
 
   it 'should stop sending messages to the output topic when a termination notification message is received' do
     batch_template = {
-        name: "hri-flink-validation-passthrough-#{ENV['TRAVIS_BRANCH']}-terminated-batch-name",
+        name: "hri-flink-validation-passthrough-#{@git_branch}-terminated-batch-name",
         dataType: 'hri-flink-validation-passthrough-batch',
         topic: @input_topic
     }
@@ -267,7 +267,7 @@ describe 'Flink Validation Passthrough Job' do
       expectedRecordCount: 15
     }
     batch_template = {
-      name: "hri-flink-validation-passthrough-#{ENV['TRAVIS_BRANCH']}-valid-batch-name",
+      name: "hri-flink-validation-passthrough-#{@git_branch}-valid-batch-name",
       dataType: 'hri-flink-validation-passthrough-batch',
       topic: @input_topic
     }
@@ -294,7 +294,7 @@ describe 'Flink Validation Passthrough Job' do
         expectedRecordCount: 5
     }
     batch_template = {
-        name: "hri-flink-validation-passthrough-#{ENV['TRAVIS_BRANCH']}-valid-batch-name",
+        name: "hri-flink-validation-passthrough-#{@git_branch}-valid-batch-name",
         dataType: 'hri-flink-validation-passthrough-batch',
         topic: @input_topic
     }
@@ -318,7 +318,7 @@ describe 'Flink Validation Passthrough Job' do
   end
 
   it 'should fail the batch if more records than expected are received after the batch status is sendCompleted but within the timeout window' do
-    batch_name = "hri-flink-validation-passthrough-#{ENV['TRAVIS_BRANCH']}-valid-batch"
+    batch_name = "hri-flink-validation-passthrough-#{@git_branch}-valid-batch"
     batch_data_type = 'hri-flink-validation-passthrough-batch'
     expected_record_count = {
         expectedRecordCount: 15
@@ -356,7 +356,7 @@ describe 'Flink Validation Passthrough Job' do
   end
 
   it 'should not fail the batch if more records than expected are received after the batch status is sendCompleted and the timeout window has expired' do
-    batch_name = "hri-flink-validation-passthrough-#{ENV['TRAVIS_BRANCH']}-valid-batch"
+    batch_name = "hri-flink-validation-passthrough-#{@git_branch}-valid-batch"
     batch_data_type = 'hri-flink-validation-passthrough-batch'
     expected_record_count = {
         expectedRecordCount: 15

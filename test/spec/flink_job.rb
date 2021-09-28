@@ -6,7 +6,6 @@ require_relative '../env'
 
 class FlinkJob
 
-  TRAVIS_BRANCH = ENV['TRAVIS_BRANCH']
   @@total_jobs = 0
   @@total_batches = 0
 
