@@ -86,3 +86,7 @@ jobs:
           ibmcloud plugin install event-streams
           ibmcloud es init -i ${ES_INSTANCE}
           ./run-ivttests.sh
+
+      - name: Gradle Publish
+        if: ${{ github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/') }}
+        run: ./gradlew publish
