@@ -77,7 +77,7 @@ jobs:
           ./run-smoketests.sh
 
       - name: Install Ruby Gems, Run IVT
-        if: ${{ github.ref == 'refs/heads/NEVER'
+        if: ${{ github.ref == 'refs/heads/NEVER' }}
         run: |
           gem install bundler
           BUNDLE_GEMFILE="./test/Gemfile" bundle install
