@@ -29,7 +29,6 @@ jobs:
       APPID_HRI_AUDIENCE: 21e7d376-9cdb-4a9d-a11f-9b76c007244d
       APPID_FLINK_AUDIENCE: a480b8ff-c7a2-4efd-948e-d0292fff8ffc
       IAM_CLOUD_URL: https://iam.cloud.ibm.com
-      ACTIONS_BRANCH:
 
       CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY }}
       SASL_PLAIN_PASSWORD: ${{ secrets.SASL_PLAIN_PASSWORD }}
@@ -82,10 +81,5 @@ jobs:
           gem install bundler
           BUNDLE_GEMFILE="./test/Gemfile" bundle install
           gem specific_install -l https://github.com/Alvearie/hri-test-helpers.git main
+          chmod +x ./run-ivttests.sh
           ./run-ivttests.sh
-
-       # - name: Run Nightly Tests
-       #   if: github.ref == 'refs/heads/develop'
-       #   run: |
-       #     ./gradlew copyNightlyTestDependencies
-       #     ./run-nightlytests.sh
