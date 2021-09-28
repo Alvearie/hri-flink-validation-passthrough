@@ -3,13 +3,10 @@ name: CI Workflow
 on:
   push:
     tags: [ '**' ]
-  workflow_dispatch:
 
 concurrency: ci-${{ github.ref }}
 
 jobs:
-
-
 
   build:
     name: Build and Run Tests
@@ -17,7 +14,6 @@ jobs:
     env:
       KAFKA_BROKERS: broker-0-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-1-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-2-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-3-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-4-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-5-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093
       NAMESPACE: develop
-      FLINK_URL: https://flink-$NAMESPACE.wh-hri.dev.watson-health.ibm.com/v1
       APPID_URL: https://us-east.appid.cloud.ibm.com
       APPID_TENANT: 0f389ea4-778e-4831-9b29-6156c4c1df1e
       OIDC_HRI_INTERNAL_CLIENT_ID: e1284680-4edf-44d2-b65c-d63097906fae
@@ -27,13 +23,11 @@ jobs:
       NOTIFICATION_TOPIC: ingest.test.flink-validation-passthrough.notification
       INVALID_TOPIC: ingest.test.flink-validation-passthrough.invalid
       ES_INSTANCE: hri-dev1-event-streams
-      HRI_INGRESS_URL: https://mgmt-api-$NAMESPACE.wh-hri.dev.watson-health.ibm.com/hri
       HRI_SERVICE_URL: https://hri-mgmt-api/hri
       ELASTIC_URL: https://c9acb36a-0feb-4b6e-aac1-6651c71d19e4.2adb0220806343e3ae11df79c89b377f.databases.appdomain.cloud:32085
       APPID_HRI_AUDIENCE: 21e7d376-9cdb-4a9d-a11f-9b76c007244d
       APPID_FLINK_AUDIENCE: a480b8ff-c7a2-4efd-948e-d0292fff8ffc
       IAM_CLOUD_URL: https://iam.cloud.ibm.com
-      ACTIONS_TAG:
 
       CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY }}
       SASL_PLAIN_PASSWORD: ${{ secrets.SASL_PLAIN_PASSWORD }}
@@ -45,14 +39,19 @@ jobs:
       ACCESS_TOKEN_VALUE: ${{ secrets.ACCESS_TOKEN_VALUE }}
 
     steps:
+      - name: Set Environment Variables
+        run: |
+          echo "FLINK_URL=https://flink-$NAMESPACE.wh-hri.dev.watson-health.ibm.com/v1" >> $GITHUB_ENV
+          echo "HRI_INGRESS_URL=https://mgmt-api-$NAMESPACE.wh-hri.dev.watson-health.ibm.com/hri" >> $GITHUB_ENV
+
       - name: Set Branch Name
         uses: nelonoel/branch-name@v1.0.1
 
       - name: Install Java
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt'
-          java-version: '9.0.4'
+          distribution: 'adopt-hotspot'
+          java-version: '8'
 
       - name: Install Ruby 2.6.5
         uses: ruby/setup-ruby@v1
@@ -71,24 +70,19 @@ jobs:
           chmod +x ./gradlew
           ./gradlew clean build shadowJar
 
-      - name: Run Smoke Tests
-        run: ./run-smoketests.sh
-
       - name: Install Ruby Gems, Run IVT
         run: |
           gem install bundler
           BUNDLE_GEMFILE="./test/Gemfile" bundle install
           gem specific_install -l https://github.com/Alvearie/hri-test-helpers.git main
+          chmod +x ./run-ivttests.sh
           ./run-ivttests.sh
 
   publish:
     name: Gradle Publish
     needs: build
-    if: ${{ github.ref == 'refs/heads/develop' }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Publish package
-        run: gradle publish
-
-
+        run: ./gradlew publish
