@@ -77,6 +77,7 @@ jobs:
           ./run-smoketests.sh
 
       - name: Install Ruby Gems, Run IVT
+        if: ${{ github.ref == 'refs/heads/NEVER'
         run: |
           gem install bundler
           BUNDLE_GEMFILE="./test/Gemfile" bundle install
@@ -88,5 +89,5 @@ jobs:
           ./run-ivttests.sh
 
       - name: Gradle Publish
-        if: ${{ github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/') }}
+        if: ${{ github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/WHFHRI-693' startsWith(github.ref, 'refs/tags/') }}
         run: ./gradlew publish
