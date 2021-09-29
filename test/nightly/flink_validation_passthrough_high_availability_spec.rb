@@ -120,6 +120,7 @@ describe 'Flink Validation Passthrough High Availability Job' do
       @flink_job.kafka_producer.produce(line, key: "#{key}", topic: @input_topic, headers: {batchId: @batch_id})
       @flink_job.kafka_producer.deliver_messages
       if key == 10
+        puts "KUBECTL OUTPUT: #{@request_helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}")[:stdout]}"
         taskmanager_pod = @request_helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}")[:stdout].split("\n").select { |s| s.include?('taskmanager') }[0].split(' ')[0]
         @request_helper.exec_command("kubectl delete pod #{taskmanager_pod} -n #{ENV['NAMESPACE']}")
         raise "Kubernetes pod #{taskmanager_pod} not deleted" unless @request_helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}")[:stdout].split("\n").select { |s| s.include?(taskmanager_pod) }.empty?
