@@ -26,7 +26,6 @@ describe 'Flink Validation Passthrough High Availability Job' do
     @mgmt_api_helper = HRITestHelpers::MgmtAPIHelper.new(ENV['HRI_INGRESS_URL'], @iam_token)
     @elastic = HRITestHelpers::ElasticHelper.new({url: ENV['ELASTIC_URL'], username: ENV['ELASTIC_USER'], password: ENV['ELASTIC_PASSWORD']})
     @record_validator = KafkaRecordValidator.new
-    @request_helper = HRITestHelpers::RequestHelper.new
 
     timestamp = Time.now.to_i
     @input_topic = ENV['INPUT_TOPIC'].gsub('.in', "-#{@git_branch}-#{timestamp}.in")
@@ -120,7 +119,7 @@ describe 'Flink Validation Passthrough High Availability Job' do
       @flink_job.kafka_producer.produce(line, key: "#{key}", topic: @input_topic, headers: {batchId: @batch_id})
       @flink_job.kafka_producer.deliver_messages
       if key == 10
-        puts "KUBECTL OUTPUT: #{@request_helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}")[:stdout]}"
+        puts "KUBECTL OUTPUT: #{@request_helper.exec_command("kubectl get namespaces")[:stdout]}"
         taskmanager_pod = @request_helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}")[:stdout].split("\n").select { |s| s.include?('taskmanager') }[0].split(' ')[0]
         @request_helper.exec_command("kubectl delete pod #{taskmanager_pod} -n #{ENV['NAMESPACE']}")
         raise "Kubernetes pod #{taskmanager_pod} not deleted" unless @request_helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}")[:stdout].split("\n").select { |s| s.include?(taskmanager_pod) }.empty?
