@@ -89,14 +89,14 @@ jobs:
           ./run-ivttests.sh
 
       - name: Run Nightly Tests
-        if: github.ref == 'refs/heads/WHFHRI-693'
+        if: github.ref == 'refs/heads/develop'
         run: |
           ibmcloud ks cluster config --cluster hri-dev1-cluster-1
           ./gradlew copyNightlyTestDependencies
           ./run-nightlytests.sh
 
       - name: Upload Test Results
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/WHFHRI-693'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
         run: |
           ./test/spec/upload_test_reports.rb IVT
           ./test/spec/upload_test_reports.rb Nightly
