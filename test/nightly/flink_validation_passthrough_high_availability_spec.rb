@@ -26,6 +26,7 @@ describe 'Flink Validation Passthrough High Availability Job' do
     @mgmt_api_helper = HRITestHelpers::MgmtAPIHelper.new(ENV['HRI_INGRESS_URL'], @iam_token)
     @elastic = HRITestHelpers::ElasticHelper.new({url: ENV['ELASTIC_URL'], username: ENV['ELASTIC_USER'], password: ENV['ELASTIC_PASSWORD']})
     @record_validator = KafkaRecordValidator.new
+    @request_helper = HRITestHelpers::RequestHelper.new
 
     timestamp = Time.now.to_i
     @input_topic = ENV['INPUT_TOPIC'].gsub('.in', "-#{@git_branch}-#{timestamp}.in")
