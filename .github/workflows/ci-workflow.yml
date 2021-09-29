@@ -86,7 +86,7 @@ jobs:
           ibmcloud login --apikey $CLOUD_API_KEY -r us-east || { echo 'IBM Cloud CLI login failed!'; exit 1; }
           ibmcloud plugin install event-streams
           ibmcloud es init -i ${ES_INSTANCE}
-#          ./run-ivttests.sh
+          ./run-ivttests.sh
 
       - name: Run Nightly Tests
         if: github.ref == 'refs/heads/WHFHRI-693'
