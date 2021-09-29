@@ -91,6 +91,7 @@ jobs:
       - name: Run Nightly Tests
         if: github.ref == 'refs/heads/WHFHRI-693'
         run: |
+          ibmcloud ks cluster config --cluster hri-dev1-cluster-1
           ./gradlew copyNightlyTestDependencies
           ./run-nightlytests.sh
 
