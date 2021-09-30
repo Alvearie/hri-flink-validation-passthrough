@@ -79,7 +79,7 @@
       Then select the number corresponding to the ES_INSTANCE in `ci-workflow.yml`.
 
 
-  - Clone the `flink-pipeline-core` repo (https://github.com/Alvearie/hri-flink-pipeline-core), then run the following command in that directory:
+  - Clone the `hri-flink-pipeline-core` repo (https://github.com/Alvearie/hri-flink-pipeline-core), then run the following command in that directory:
     
       ```./gradlew publishToMavenLocal```
     
