@@ -3,6 +3,7 @@ name: CI Workflow
 on:
   push:
     branches: [ '**' ]
+    tags: [ '**' ]
   workflow_dispatch:
 
 concurrency: ci-${{ github.ref }}
@@ -49,17 +50,17 @@ jobs:
       - name: Set Branch Name
         uses: nelonoel/branch-name@v1.0.1
 
+      - name: Set GitHub Tag environment variable
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          TAG_ID=${GITHUB_REF##*/}
+          echo "ACTIONS_TAG=$TAG_ID" >> $GITHUB_ENV
+
       - name: Install Java
         uses: actions/setup-java@v2
         with:
           distribution: 'adopt-hotspot'
           java-version: '8'
-
-      - name: Install Ruby 2.6.5
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 2.6.5
-          bundler-cache: false
 
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -69,13 +70,20 @@ jobs:
 
       - name: Gradle Build
         run: |
-          ./gradlew clean build shadowJar --info
+          ./gradlew clean build shadowJar
 
       - name: Run Smoke Tests
         run: |
           ./run-smoketests.sh
 
+      - name: Install Ruby 2.6.5
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.6.5
+          bundler-cache: false
+
       - name: Install Ruby Gems, Run IVT
+        if: ${{ startsWith(github.ref, 'refs/heads/') }}
         run: |
           gem install bundler
           BUNDLE_GEMFILE="./test/Gemfile" bundle install
