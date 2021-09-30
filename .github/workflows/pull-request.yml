@@ -1,0 +1,41 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    types: [opened]
+  pull_request_review:
+    types: [submitted]
+
+concurrency: pr-${{ github.ref }}
+
+jobs:
+  dependency-checks:
+    name: Dependency Checks
+
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set Branch Name
+        uses: nelonoel/branch-name@v1.0.1
+
+      - name: Set up adoptopenjdk8
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'adopt-hotspot'
+          cache: 'gradle'
+
+      - name: Gradle Build
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build shadowJar --info
+
+      - name: Check OpenSource Dependencies
+        env:
+          SONATYPE_OSS_PASSWORD: ${{ secrets.SONATYPE_OSS_PASSWORD }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./gradlew ossIndexAudit --info
