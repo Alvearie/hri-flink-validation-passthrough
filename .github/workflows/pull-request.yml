@@ -30,7 +30,6 @@ jobs:
 
       - name: Gradle Build
         run: |
-          chmod +x ./gradlew
           ./gradlew clean build shadowJar --info
 
       - name: Check OpenSource Dependencies
