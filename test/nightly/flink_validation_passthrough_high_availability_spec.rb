@@ -17,6 +17,7 @@ describe 'Flink Validation Passthrough High Availability Job' do
     TENANT_ID = 'test'
     BATCH_COMPLETION_DELAY = 5000
     @git_branch = ENV['BRANCH_NAME']
+    @namespace = ENV['NAMESPACE']
     @flink_helper = HRITestHelpers::FlinkHelper.new(ENV['FLINK_URL'])
     @event_streams_helper = HRITestHelpers::EventStreamsHelper.new
     @iam_token = HRITestHelpers::IAMHelper.new(ENV['IAM_CLOUD_URL']).get_access_token(ENV['CLOUD_API_KEY'])
@@ -121,9 +122,9 @@ describe 'Flink Validation Passthrough High Availability Job' do
       @flink_job.kafka_producer.deliver_messages
       if key == 10
         puts "KUBECTL OUTPUT: #{@request_helper.exec_command("kubectl get namespaces")[:stdout]}"
-        taskmanager_pod = @request_helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}")[:stdout].split("\n").select { |s| s.include?('taskmanager') }[0].split(' ')[0]
-        @request_helper.exec_command("kubectl delete pod #{taskmanager_pod} -n #{ENV['NAMESPACE']}")
-        raise "Kubernetes pod #{taskmanager_pod} not deleted" unless @request_helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}")[:stdout].split("\n").select { |s| s.include?(taskmanager_pod) }.empty?
+        taskmanager_pod = @request_helper.exec_command("kubectl get pods -n #{@namespace}")[:stdout].split("\n").select { |s| s.include?('taskmanager') }[0].split(' ')[0]
+        @request_helper.exec_command("kubectl delete pod #{taskmanager_pod} -n #{@namespace}")
+        raise "Kubernetes pod #{taskmanager_pod} not deleted" unless @request_helper.exec_command("kubectl get pods -n #{@namespace}")[:stdout].split("\n").select { |s| s.include?(taskmanager_pod) }.empty?
         Logger.new(STDOUT).info("Deleted taskmanager pod #{taskmanager_pod}")
       end
       key += 1
@@ -154,8 +155,8 @@ describe 'Flink Validation Passthrough High Availability Job' do
       @flink_job.kafka_producer.produce(line, key: "#{key}", topic: @input_topic, headers: {batchId: @batch_id})
       @flink_job.kafka_producer.deliver_messages
       if key == 10
-        jobmanager_pod = @request_helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}")[:stdout].split("\n").select { |s| s.include?('jobmanager') }[0].split(' ')[0]
-        @request_helper.exec_command("kubectl delete pod #{jobmanager_pod} -n #{ENV['NAMESPACE']}")
+        jobmanager_pod = @request_helper.exec_command("kubectl get pods -n #{@namespace}")[:stdout].split("\n").select { |s| s.include?('jobmanager') }[0].split(' ')[0]
+        @request_helper.exec_command("kubectl delete pod #{jobmanager_pod} -n #{@namespace}")
         Logger.new(STDOUT).info("Deleted jobmanager pod: #{jobmanager_pod}")
       end
       key += 1
@@ -202,12 +203,12 @@ describe 'Flink Validation Passthrough High Availability Job' do
       @flink_job.kafka_producer.produce(line, key: "#{key}", topic: @input_topic, headers: {batchId: @batch_id})
       @flink_job.kafka_producer.deliver_messages
       if key == 10
-        zookeeper_pod = @request_helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}")[:stdout].split("\n").select { |s| s.include?('zookeeper') }[0].split(' ')[0]
-        @request_helper.exec_command("kubectl delete pod #{zookeeper_pod} -n #{ENV['NAMESPACE']}")
+        zookeeper_pod = @request_helper.exec_command("kubectl get pods -n #{@namespace}")[:stdout].split("\n").select { |s| s.include?('zookeeper') }[0].split(' ')[0]
+        @request_helper.exec_command("kubectl delete pod #{zookeeper_pod} -n #{@namespace}")
         Logger.new(STDOUT).info("Deleted zookeeper pod: #{zookeeper_pod}")
         Timeout.timeout(15, nil, 'Zookeeper pod not reinitializing after 15 seconds') do
           while true
-            break unless @request_helper.exec_command("kubectl get pods -n #{ENV['NAMESPACE']}")[:stdout].split("\n").select { |s| s.include?(zookeeper_pod) && s.include?('Init') }.empty?
+            break unless @request_helper.exec_command("kubectl get pods -n #{@namespace}")[:stdout].split("\n").select { |s| s.include?(zookeeper_pod) && s.include?('Init') }.empty?
           end
         end
       end
