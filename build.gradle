@@ -52,7 +52,7 @@ allprojects {
                 : getWorkingBranch()
     }
 
-    // If not running in Github Actions add 'local' to the version to support local development
+    // If not running in Actions add 'local' to the version to support local development
     if (System.getenv('BRANCH_NAME') == null || System.getenv('BRANCH_NAME') == "") {
         version = "${branch}-local-SNAPSHOT"
     } else if (System.getenv('ACTIONS_TAG') == null || System.getenv('ACTIONS_TAG') == "") {

@@ -17,6 +17,7 @@ jobs:
       APPID_HRI_AUDIENCE: 21e7d376-9cdb-4a9d-a11f-9b76c007244d
       APPID_TENANT: 0f389ea4-778e-4831-9b29-6156c4c1df1e
       APPID_URL: https://us-east.appid.cloud.ibm.com
+      COS_URL: https://s3.us-east.cloud-object-storage.appdomain.cloud
       ELASTIC_URL: https://c9acb36a-0feb-4b6e-aac1-6651c71d19e4.2adb0220806343e3ae11df79c89b377f.databases.appdomain.cloud:32085
       ES_INSTANCE: hri-dev1-event-streams
       HRI_SERVICE_URL: https://hri-mgmt-api/hri
@@ -86,6 +87,19 @@ jobs:
           ibmcloud plugin install event-streams
           ibmcloud es init -i ${ES_INSTANCE}
           ./run-ivttests.sh
+
+      - name: Run Nightly Tests
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          ibmcloud ks cluster config --cluster hri-dev1-cluster-1
+          ./gradlew copyNightlyTestDependencies
+          ./run-nightlytests.sh
+
+      - name: Upload Test Results
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+        run: |
+          ./test/spec/upload_test_reports.rb IVT
+          ./test/spec/upload_test_reports.rb Nightly
 
       - name: Gradle Publish
         if: ${{ github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/') }}
