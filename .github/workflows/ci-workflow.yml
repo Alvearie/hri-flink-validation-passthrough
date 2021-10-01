@@ -96,7 +96,7 @@ jobs:
           ./run-ivttests.sh
 
       - name: Run Nightly Tests
-        if: github.ref == 'refs/heads/develop'
+        if: github.ref == 'refs/heads/WHFHRI-693' && env.GITHUB_EVENT_NAME == 'workflow_dispatch'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
