@@ -20,15 +20,15 @@ time = Time.now.strftime '%Y%m%d%H%M%S'
 if ARGV[0] == 'IVT'
   logger.info("Uploading ivttest-#{time}.xml to COS")
   doc = Nokogiri::XML(File.open("#{Dir.pwd}/ivttest.xml")) { |file| file.noblanks }
-  doc.search('//testsuite').attribute('name').value = "flink-validation-passthrough - #{ENV['BRANCH_NAME']} - IVT"
-  File.rename("#{Dir.pwd}/ivttest.xml", "#{Dir.pwd}/flink-validation-passthrough-ivttest-#{time}.xml")
-  cos_helper.upload_object_data('wh-hri-dev1-allure-reports', "flink-validation-passthrough-ivttest-#{time}.xml", File.read(File.join(Dir.pwd, "flink-validation-passthrough-ivttest-#{time}.xml")))
+  doc.search('//testsuite').attribute('name').value = "hri-flink-validation-passthrough - #{ENV['BRANCH_NAME']} - IVT"
+  File.rename("#{Dir.pwd}/ivttest.xml", "#{Dir.pwd}/hri-flink-validation-passthrough-ivttest-#{time}.xml")
+  cos_helper.upload_object_data('wh-hri-dev1-allure-reports', "hri-flink-validation-passthrough-ivttest-#{time}.xml", File.read(File.join(Dir.pwd, "hri-flink-validation-passthrough-ivttest-#{time}.xml")))
 elsif ARGV[0] == 'Nightly'
   logger.info("Uploading nightlytest-#{time}.xml to COS")
   doc = Nokogiri::XML(File.open("#{Dir.pwd}/nightlytest.xml")) { |file| file.noblanks }
-  doc.search('//testsuite').attribute('name').value = "flink-validation-passthrough - #{ENV['BRANCH_NAME']} - Nightly"
-  File.rename("#{Dir.pwd}/nightlytest.xml", "#{Dir.pwd}/flink-validation-passthrough-nightlytest-#{time}.xml")
-  cos_helper.upload_object_data('wh-hri-dev1-allure-reports', "flink-validation-passthrough-nightlytest-#{time}.xml", File.read(File.join(Dir.pwd, "flink-validation-passthrough-nightlytest-#{time}.xml")))
+  doc.search('//testsuite').attribute('name').value = "hri-flink-validation-passthrough - #{ENV['BRANCH_NAME']} - Nightly"
+  File.rename("#{Dir.pwd}/nightlytest.xml", "#{Dir.pwd}/hri-flink-validation-passthrough-nightlytest-#{time}.xml")
+  cos_helper.upload_object_data('wh-hri-dev1-allure-reports', "hri-flink-validation-passthrough-nightlytest-#{time}.xml", File.read(File.join(Dir.pwd, "hri-flink-validation-passthrough-nightlytest-#{time}.xml")))
 else
   raise "Invalid argument: #{ARGV[0]}. Valid arguments: 'IVT' or 'Nightly'"
 end
