@@ -8,6 +8,15 @@ plugins {
     id 'jacoco'
 }
 
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.sonatype.gradle.plugins:scan-gradle-plugin:2.2.0"
+    }
+}
+
 allprojects {
     group = 'org.alvearie.hri.flink'
     version = 'Alpha.Dev'
