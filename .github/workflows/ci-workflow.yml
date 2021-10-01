@@ -32,8 +32,6 @@ jobs:
       OUTPUT_TOPIC: ingest.test.flink-validation-passthrough.out
       NOTIFICATION_TOPIC: ingest.test.flink-validation-passthrough.notification
 
-      ACCESS_TOKEN_USER: ${{ secrets.ACCESS_TOKEN_USER }}
-      ACCESS_TOKEN_VALUE: ${{ secrets.ACCESS_TOKEN_VALUE }}
       CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY }}
       ELASTIC_PASSWORD: ${{ secrets.ELASTIC_PASSWORD }}
       ELASTIC_USER: ${{ secrets.ELASTIC_USER }}
@@ -69,6 +67,9 @@ jobs:
         run: ./copyrightCheck.sh
 
       - name: Gradle Build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
         run: |
           ./gradlew clean build shadowJar
 
@@ -96,6 +97,9 @@ jobs:
 
       - name: Run Nightly Tests
         if: github.ref == 'refs/heads/develop'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
         run: |
           ibmcloud ks cluster config --cluster hri-dev1-cluster-1
           ./gradlew copyNightlyTestDependencies
@@ -109,6 +113,9 @@ jobs:
 
       - name: Gradle Publish
         if: ${{ github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
         run: ./gradlew publish
 
       - name: Post Slack Update

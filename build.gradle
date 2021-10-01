@@ -36,8 +36,8 @@ allprojects {
     repositories {
         maven {
             credentials {
-                username = findProperty('ACCESS_TOKEN_USER') ?: System.getenv('ACCESS_TOKEN_USER')
-                password = findProperty('ACCESS_TOKEN_VALUE') ?: System.getenv('ACCESS_TOKEN_VALUE')
+                username = findProperty('GITHUB_ACTOR') ?: System.getenv('GITHUB_ACTOR')
+                password = findProperty('GITHUB_TOKEN') ?: System.getenv('GITHUB_TOKEN')
             }
 
             url "https://maven.pkg.github.com/Alvearie/hri-flink-pipeline-core"
@@ -140,8 +140,8 @@ publishing {
         maven {
             url 'https://maven.pkg.github.com/Alvearie/hri-flink-validation-passthrough'
             credentials {
-                username findProperty('ACCESS_TOKEN_USER') ?: System.getenv('ACCESS_TOKEN_USER')
-                password findProperty('ACCESS_TOKEN_VALUE') ?: System.getenv('ACCESS_TOKEN_VALUE')
+                username findProperty('GITHUB_ACTOR') ?: System.getenv('GITHUB_ACTOR')
+                password findProperty('GITHUB_TOKEN') ?: System.getenv('GITHUB_TOKEN')
             }
         }
     }
