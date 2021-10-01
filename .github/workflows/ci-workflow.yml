@@ -3,7 +3,6 @@ name: CI Workflow
 on:
   push:
     branches: [ '**' ]
-    tags: [ '**' ]
   workflow_dispatch:
 
 concurrency: ci-${{ github.ref }}
@@ -48,12 +47,6 @@ jobs:
       - name: Set Branch Name
         uses: nelonoel/branch-name@v1.0.1
 
-      - name: Set GitHub Tag environment variable
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        run: |
-          TAG_ID=${GITHUB_REF##*/}
-          echo "ACTIONS_TAG=$TAG_ID" >> $GITHUB_ENV
-
       - name: Install Java
         uses: actions/setup-java@v2
         with:
@@ -84,7 +77,6 @@ jobs:
           bundler-cache: false
 
       - name: Install Ruby Gems, Run IVT
-        if: ${{ startsWith(github.ref, 'refs/heads/') }}
         run: |
           gem install bundler
           BUNDLE_GEMFILE="./test/Gemfile" bundle install
@@ -112,7 +104,7 @@ jobs:
           ./test/spec/upload_test_reports.rb Nightly
 
       - name: Gradle Publish
-        if: ${{ github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/') }}
+        if: ${{ github.ref == 'refs/heads/develop' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}

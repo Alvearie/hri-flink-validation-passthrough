@@ -11,7 +11,8 @@ concurrency: pr-${{ github.ref }}
 jobs:
   dependency-checks:
     name: Dependency Checks
-
+    # run if the PR was opened or there was a comment containing '/pr_checks'
+    if: (github.event_name == 'pull_request') || (github.event_name == 'pull_request_review' && contains(github.event.review.body, '/pr_checks'))
     runs-on: ubuntu-latest
     steps:
 
