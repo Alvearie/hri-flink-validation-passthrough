@@ -1,13 +1,4 @@
 
-plugins {
-    id 'java'
-    id 'application'
-    // shadow plugin to produce fat JARs
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
-    id 'maven-publish'
-    id 'jacoco'
-}
-
 buildscript {
     repositories {
         mavenCentral()
@@ -15,6 +6,15 @@ buildscript {
     dependencies {
         classpath "org.sonatype.gradle.plugins:scan-gradle-plugin:2.2.0"
     }
+}
+
+plugins {
+    id 'java'
+    id 'application'
+    // shadow plugin to produce fat JARs
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'maven-publish'
+    id 'jacoco'
 }
 
 allprojects {
