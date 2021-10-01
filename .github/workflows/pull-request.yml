@@ -38,11 +38,13 @@ jobs:
           ./gradlew clean build publishToMavenLocal
 
       - name: Check OpenSource Dependencies
+        # override default -eo pipefail
+        shell: bash --noprofile --norc {0}
         env:
           SONATYPE_OSS_PASSWORD: ${{ secrets.SONATYPE_OSS_PASSWORD }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ./gradlew ossIndexAudit --info
+          ./gradlew ossIndexAudit
           found=$?
           echo "VULNERABILITIES=$found" >> $GITHUB_ENV
           [[ "$found" == 1 ]] && echo "::error ::Vulnerabilities found in dependencies."
