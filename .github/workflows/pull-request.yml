@@ -42,7 +42,7 @@ jobs:
           SONATYPE_OSS_PASSWORD: ${{ secrets.SONATYPE_OSS_PASSWORD }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ./gradlew ossIndexAudit
+          ./gradlew ossIndexAudit --info
           found=$?
           echo "VULNERABILITIES=$found" >> $GITHUB_ENV
           [[ "$found" == 1 ]] && echo "::error ::Vulnerabilities found in dependencies."
