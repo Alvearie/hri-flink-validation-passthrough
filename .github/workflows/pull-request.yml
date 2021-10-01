@@ -43,3 +43,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew ossIndexAudit
+          found=$?
+          echo "VULNERABILITIES=$found" >> $GITHUB_ENV
+          [[ "$found" == 1 ]] && echo "::error ::Vulnerabilities found in dependencies."
+          exit 0
+
+        - uses: actions/github-script@v4
+          if: ${{ env.VULNERABILITIES != 0 }}
+          with:
+            script: |
+              github.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: "## ⚠️ Vulnerabilities found in dependencies.\nSee the 'PR -> Vulnerability Checks' logs for more details: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              })
