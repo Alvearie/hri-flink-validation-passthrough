@@ -21,7 +21,7 @@ Note: This software uses Apache Flink (https://flink.apache.org/) for streaming 
 ### Building
 From the base directory, run `./gradlew clean build`. This will download dependencies and run all the unit tests. 
 
-This depends on the `flink-pipeline-core` [GitHub repo](https://github.com/Alvearie/hri-flink-pipeline-core) and its published packages.
+This depends on the `hri-flink-pipeline-core` [GitHub repo](https://github.com/Alvearie/hri-flink-pipeline-core) and its published packages.
 
 ```
 hri-flink-validation-passthrough % ./gradlew clean build

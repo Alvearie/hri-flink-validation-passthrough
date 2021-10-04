@@ -1,4 +1,13 @@
 
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.sonatype.gradle.plugins:scan-gradle-plugin:2.2.0"
+    }
+}
+
 plugins {
     id 'java'
     id 'application'
@@ -14,6 +23,8 @@ allprojects {
     description = """Flink Passthrough Validation Job"""
     applicationDefaultJvmArgs = ["-Dlog4j.configuration=log4j.properties"]
     mainClassName = 'org.alvearie.hri.flink.PassthroughStreamingJob'
+
+    apply plugin: "org.sonatype.gradle.plugins.scan"
 
     ext {
         pipelineCoreVersion = 'develop-SNAPSHOT'
@@ -34,35 +45,49 @@ allprojects {
     }
 
     repositories {
-        ['TBD'].each { repo ->
-            maven {
-                credentials {
-                    username = findProperty('user') ?: System.getenv('user')
-                    password = findProperty('password') ?: System.getenv('password')
-                }
-
-                url "TBD/$repo/"
+        maven {
+            credentials {
+                username = findProperty('GITHUB_ACTOR') ?: System.getenv('GITHUB_ACTOR')
+                password = findProperty('GITHUB_TOKEN') ?: System.getenv('GITHUB_TOKEN')
             }
+
+            url "https://maven.pkg.github.com/Alvearie/hri-flink-pipeline-core"
         }
         mavenCentral()
         mavenLocal()
     }
 
     ext {
-        branch = System.getenv('TRAVIS_BRANCH') != null
-                ? System.getenv('TRAVIS_BRANCH')
+        branch = System.getenv('BRANCH_NAME') != null
+                ? System.getenv('BRANCH_NAME')
                 : getWorkingBranch()
+
+        ossPassword = findProperty("SONATYPE_OSS_PASSWORD") ?: System.getenv("SONATYPE_OSS_PASSWORD")
     }
 
-    // If not running in travis add 'local' to the version to support local development
-    if (System.getenv('TRAVIS_BRANCH') == null || System.getenv('TRAVIS_BRANCH') == "") {
+    // If not running in Actions add 'local' to the version to support local development
+    if (System.getenv('BRANCH_NAME') == null || System.getenv('BRANCH_NAME') == "") {
         version = "${branch}-local-SNAPSHOT"
-    } else if (System.getenv('TRAVIS_TAG') == null || System.getenv('TRAVIS_TAG') == "") {
+    } else if (System.getenv('ACTIONS_TAG') == null || System.getenv('ACTIONS_TAG') == "") {
         version = "${branch}-SNAPSHOT"
-    } else if (System.getenv('TRAVIS_TAG') == "v${version}") {
+    } else if (System.getenv('ACTIONS_TAG') == "v${version}") {
         version = "${version}"
     } else {
-        throw new InvalidUserDataException(String.format("The tag '%s' does not match with the current release version '%s'",System.getenv('TRAVIS_TAG'),"${version}"));
+        throw new InvalidUserDataException(String.format("The tag '%s' does not match with the current release version '%s'",System.getenv('ACTIONS_TAG'),"${version}"));
+    }
+
+    ossIndexAudit {
+        username = 'hribld@us.ibm.com'
+        password = "${ossPassword}"
+        allConfigurations = true // if true includes the dependencies in all resolvable configurations. By default is false, meaning only 'compileClasspath', 'runtimeClasspath', 'releaseCompileClasspath' and 'releaseRuntimeClasspath' are considered
+        useCache = true // true by default
+        cacheExpiration = 'PT86400S' // note: time in seconds (24hrs); 12 hours if omitted. It must follow the Joda Time specification at https://www.javadoc.io/doc/joda-time/joda-time/2.10.4/org/joda/time/Duration.html#parse-java.lang.String-
+        colorEnabled = true // if true prints vulnerability description in color. By default is true.
+        printBanner = true // if true will print ASCII text banner. By default is true.
+
+        // ossIndexAudit can be configured to exclude vulnerabilities from matching
+        // excludeVulnerabilityIds = ['39d74cc8-457a-4e57-89ef-a258420138c5'] // list containing ids of vulnerabilities to be ignored
+        // excludeCoordinates = ['commons-fileupload:commons-fileupload:1.3'] // list containing coordinate of components which if vulnerable should be ignored
     }
 }
 
@@ -140,10 +165,10 @@ publishing {
 
     repositories {
         maven {
-            url 'TBD'
+            url 'https://maven.pkg.github.com/Alvearie/hri-flink-validation-passthrough'
             credentials {
-                username findProperty('user') ?: ''
-                password findProperty('password') ?: ''
+                username findProperty('GITHUB_ACTOR') ?: System.getenv('GITHUB_ACTOR')
+                password findProperty('GITHUB_TOKEN') ?: System.getenv('GITHUB_TOKEN')
             }
         }
     }

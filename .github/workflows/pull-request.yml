@@ -1,0 +1,62 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    types: [opened]
+  pull_request_review:
+    types: [submitted]
+
+concurrency: pr-${{ github.ref }}
+
+jobs:
+  dependency-checks:
+    name: Dependency Checks
+    # run if the PR was opened or there was a comment containing '/pr_checks'
+    if: (github.event_name == 'pull_request') || (github.event_name == 'pull_request_review' && contains(github.event.review.body, '/pr_checks'))
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set Branch Env Var
+        run: |
+          echo "BRANCH_NAME=$(echo ${{github.event.pull_request.head.ref}} | tr / -)" >> $GITHUB_ENV
+
+      - name: Set up adoptopenjdk8
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'adopt-hotspot'
+          cache: 'gradle'
+
+      - name: Gradle Build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./gradlew clean build publishToMavenLocal
+
+      - name: Check OpenSource Dependencies
+        # override default -eo pipefail
+        shell: bash --noprofile --norc {0}
+        env:
+          SONATYPE_OSS_PASSWORD: ${{ secrets.SONATYPE_OSS_PASSWORD }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./gradlew ossIndexAudit
+          found=$?
+          echo "VULNERABILITIES=$found" >> $GITHUB_ENV
+          [[ "$found" == 1 ]] && echo "::error ::Vulnerabilities found in dependencies."
+          exit 0
+
+      - name: Post Pull Request Comment
+        uses: actions/github-script@v4
+        if: ${{ env.VULNERABILITIES != 0 }}
+        with:
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "## ⚠️ Vulnerabilities found in dependencies.\nSee the 'PR -> Vulnerability Checks' logs for more details: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            })
