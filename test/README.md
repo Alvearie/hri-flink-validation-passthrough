@@ -65,7 +65,7 @@
         * BRANCH_NAME - your git branch name
 
 
-    - Install the IBM Cloud CLI, the Functions CLI, and the Event Streams CLI. You can find the RESOURCE_GROUP in `travis.yml` and the CLOUD_API_KEY in 1Password:
+    - Install the IBM Cloud CLI, the Functions CLI, and the Event Streams CLI. You can find the RESOURCE_GROUP in `ci-workflow.yml` and the CLOUD_API_KEY in 1Password:
          ```bash
              curl -sL https://ibm.biz/idt-installer | bash
              bx login --apikey {CLOUD_API_KEY}
@@ -75,10 +75,10 @@
              bx plugin install event-streams
              bx es init
          ```
-      Then select the number corresponding to the ES_INSTANCE in `travis.yml`.
+      Then select the number corresponding to the ES_INSTANCE in `ci-workflow.yml`.
 
 
-    - Clone the `flink-pipeline-core` repo (https://github.com/Alvearie/hri-flink-pipeline-core), then run the following command in that directory:
+    - Clone the `hri-flink-pipeline-core` repo (https://github.com/Alvearie/hri-flink-pipeline-core), then run the following command in that directory:
     
       ```./gradlew publishToMavenLocal```
     
