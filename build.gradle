@@ -60,6 +60,8 @@ allprojects {
         branch = System.getenv('BRANCH_NAME') != null
                 ? System.getenv('BRANCH_NAME')
                 : getWorkingBranch()
+
+        ossPassword = findProperty("SONATYPE_OSS_PASSWORD") ?: System.getenv("SONATYPE_OSS_PASSWORD")
     }
 
     // If not running in Actions add 'local' to the version to support local development
