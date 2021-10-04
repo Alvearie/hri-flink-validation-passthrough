@@ -5,12 +5,12 @@ on:
     tags: [ '**' ]
   workflow_dispatch:
 
-concurrency: ci-${{ github.ref }}
+concurrency: release-${{ github.ref }}
 
 jobs:
 
-  build-and-run-tests:
-    name: Build and Run Tests
+  release:
+    name: Release
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +19,6 @@ jobs:
         uses: nelonoel/branch-name@v1.0.1
 
       - name: Set GitHub Tag environment variable
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: |
           TAG_ID=${GITHUB_REF##*/}
           echo "ACTIONS_TAG=$TAG_ID" >> $GITHUB_ENV
@@ -36,17 +35,9 @@ jobs:
       - name: Copyright Check
         run: ./copyrightCheck.sh
 
-      - name: Gradle Build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
-        run: |
-          ./gradlew clean build shadowJar
-
       - name: Gradle Publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
         run: ./gradlew publish
 
       - name: Post Slack Update

@@ -62,7 +62,6 @@ jobs:
       - name: Gradle Build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
         run: |
           ./gradlew clean build shadowJar
 
@@ -91,7 +90,6 @@ jobs:
         if: github.ref == 'refs/heads/develop' && github.event_name == 'workflow_dispatch'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
         run: |
           ibmcloud ks cluster config --cluster hri-dev1-cluster-1
           ./gradlew copyNightlyTestDependencies
@@ -107,7 +105,6 @@ jobs:
         if: ${{ github.ref == 'refs/heads/develop' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
         run: ./gradlew publish
 
       - name: Post Slack Update
