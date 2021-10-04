@@ -88,8 +88,6 @@ jobs:
 
       - name: Run Nightly Tests
         if: github.ref == 'refs/heads/develop' && github.event_name == 'workflow_dispatch'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ibmcloud ks cluster config --cluster hri-dev1-cluster-1
           ./gradlew copyNightlyTestDependencies
