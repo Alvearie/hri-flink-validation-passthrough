@@ -22,6 +22,7 @@ require 'securerandom'
 require 'kafka'
 require 'base64'
 require 'zstd-ruby'
+require 'nokogiri'
 
 require_relative './spec/helper'
 require_relative './spec/flink_helper'
