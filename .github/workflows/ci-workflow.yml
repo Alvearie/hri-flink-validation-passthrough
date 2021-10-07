@@ -22,7 +22,7 @@ jobs:
       HRI_SERVICE_URL: https://hri-mgmt-api/hri
       IAM_CLOUD_URL: https://iam.cloud.ibm.com
       KAFKA_BROKERS: broker-0-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-1-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-2-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-3-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-4-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-5-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093
-      NAMESPACE: main
+      NAMESPACE: support-2
       OIDC_ISSUER: https://us-east.appid.cloud.ibm.com/oauth/v4/0f389ea4-778e-4831-9b29-6156c4c1df1e
       OIDC_HRI_DATA_INTEGRATOR_CLIENT_ID: e6ae020a-ff2a-4594-8337-0acfdf76f710
       OIDC_HRI_INTERNAL_CLIENT_ID: e1284680-4edf-44d2-b65c-d63097906fae
