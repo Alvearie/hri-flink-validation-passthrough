@@ -118,7 +118,7 @@ class FlinkHelper
                            '--input',
                            input_topic,
                            '--mgmt-url',
-                           ENV['HRI_SERVICE_URL'],
+                           ENV['HRI_URL'],
                            '--client-id',
                            ENV['OIDC_HRI_INTERNAL_CLIENT_ID'],
                            '--client-secret',
