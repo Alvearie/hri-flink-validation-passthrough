@@ -14,7 +14,7 @@ describe 'Flink Validation Passthrough Job' do
     @event_streams_helper = EventStreamsHelper.new
     @flink_api_oauth_token = AppIDHelper.new.get_access_token(Base64.encode64("#{ENV['OIDC_HRI_DATA_INTEGRATOR_CLIENT_ID']}:#{ENV['OIDC_HRI_DATA_INTEGRATOR_CLIENT_SECRET']}").delete("\n"), '', ENV['APPID_FLINK_AUDIENCE'])
     @hri_oauth_token = AppIDHelper.new.get_access_token(Base64.encode64("#{ENV['OIDC_HRI_DATA_INTEGRATOR_CLIENT_ID']}:#{ENV['OIDC_HRI_DATA_INTEGRATOR_CLIENT_SECRET']}").delete("\n"), 'tenant_test hri_data_integrator', ENV['APPID_HRI_AUDIENCE'])
-    @hri_helper = HRIHelper.new(ENV['HRI_INGRESS_URL'])
+    @hri_helper = HRIHelper.new(ENV['HRI_URL'])
     @elastic = ElasticHelper.new
     @record_validator = KafkaRecordValidator.new
 

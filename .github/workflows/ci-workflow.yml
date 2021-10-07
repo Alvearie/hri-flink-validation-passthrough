@@ -43,7 +43,6 @@ jobs:
       - name: Set Environment Variables
         run: |
           echo "FLINK_URL=https://flink-$NAMESPACE.wh-hri.dev.watson-health.ibm.com/v1" >> $GITHUB_ENV
-          echo "HRI_INGRESS_URL=https://mgmt-api-$NAMESPACE.wh-hri.dev.watson-health.ibm.com/hri" >> $GITHUB_ENV
 
       - name: Set Branch Name
         uses: nelonoel/branch-name@v1.0.1
