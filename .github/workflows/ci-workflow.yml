@@ -78,7 +78,6 @@ jobs:
         run: |
           gem install bundler
           BUNDLE_GEMFILE="./test/Gemfile" bundle install
-          gem specific_install -l https://github.com/Alvearie/hri-test-helpers.git main
           curl -sL https://ibm.biz/idt-installer | bash
           ibmcloud login --apikey $CLOUD_API_KEY -r us-east || { echo 'IBM Cloud CLI login failed!'; exit 1; }
           ibmcloud plugin install event-streams
@@ -90,6 +89,6 @@ jobs:
         id: slack
         uses: slackapi/slack-github-action@v1.14.0
         with:
-          payload: "{\"Repo\":\"${{ github.repository }}\",\"Workflow\":\"${{ github.workflow }}\",\"Branch\":\"${{ env.BRANCH_NAME }}\",\"Link\":\"https://github.com/Alvearie/hri-mgmt-api/actions/runs/${{ github.run_id }}\"}"
+          payload: "{\"Repo\":\"${{ github.repository }}\",\"Workflow\":\"${{ github.workflow }}\",\"Branch\":\"${{ env.BRANCH_NAME }}\",\"Link\":\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
