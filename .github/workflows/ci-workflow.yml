@@ -1,0 +1,94 @@
+name: CI Workflow
+
+on:
+  push:
+    branches: [ '**' ]
+  workflow_dispatch:
+
+concurrency: ci-${{ github.ref }}
+
+jobs:
+
+  build-and-run-tests:
+    name: Build and Run Tests
+    runs-on: ubuntu-latest
+    env:
+      APPID_FLINK_AUDIENCE: a480b8ff-c7a2-4efd-948e-d0292fff8ffc
+      APPID_HRI_AUDIENCE: 21e7d376-9cdb-4a9d-a11f-9b76c007244d
+      APPID_TENANT: 0f389ea4-778e-4831-9b29-6156c4c1df1e
+      APPID_URL: https://us-east.appid.cloud.ibm.com
+      ELASTIC_URL: https://c9acb36a-0feb-4b6e-aac1-6651c71d19e4.2adb0220806343e3ae11df79c89b377f.databases.appdomain.cloud:32085
+      ES_INSTANCE: hri-dev1-event-streams
+      IAM_CLOUD_URL: https://iam.cloud.ibm.com
+      KAFKA_BROKERS: broker-0-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-1-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-2-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-3-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-4-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-5-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093
+      NAMESPACE: main
+      OIDC_ISSUER: https://us-east.appid.cloud.ibm.com/oauth/v4/0f389ea4-778e-4831-9b29-6156c4c1df1e
+      OIDC_HRI_DATA_INTEGRATOR_CLIENT_ID: e6ae020a-ff2a-4594-8337-0acfdf76f710
+      OIDC_HRI_INTERNAL_CLIENT_ID: e1284680-4edf-44d2-b65c-d63097906fae
+      INPUT_TOPIC: ingest.test.flink-validation-passthrough.in
+      INVALID_TOPIC: ingest.test.flink-validation-passthrough.invalid
+      OUTPUT_TOPIC: ingest.test.flink-validation-passthrough.out
+      NOTIFICATION_TOPIC: ingest.test.flink-validation-passthrough.notification
+      HRI_URL: https://fdb4b4df.us-east.apigw.appdomain.cloud/hri
+
+      CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY }}
+      ELASTIC_PASSWORD: ${{ secrets.ELASTIC_PASSWORD }}
+      ELASTIC_USER: ${{ secrets.ELASTIC_USER }}
+      OIDC_HRI_DATA_INTEGRATOR_CLIENT_SECRET: ${{ secrets.OIDC_HRI_DATA_INTEGRATOR_CLIENT_SECRET }}
+      OIDC_HRI_INTERNAL_CLIENT_SECRET: ${{ secrets.OIDC_HRI_INTERNAL_CLIENT_SECRET }}
+      SASL_PLAIN_PASSWORD: ${{ secrets.SASL_PLAIN_PASSWORD }}
+
+    steps:
+      - name: Set Environment Variables
+        run: |
+          echo "FLINK_URL=https://flink-$NAMESPACE.wh-hri.dev.watson-health.ibm.com/v1" >> $GITHUB_ENV
+
+      - name: Set Branch Name
+        uses: nelonoel/branch-name@v1.0.1
+
+      - name: Install Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt-hotspot'
+          java-version: '8'
+
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Copyright Check
+        run: ./copyrightCheck.sh
+
+      - name: Gradle Build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./gradlew clean build shadowJar
+
+      - name: Run Smoke Tests
+        run: |
+          ./run-smoketests.sh
+
+      - name: Install Ruby 2.6.5
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.6.5
+          bundler-cache: false
+
+      - name: Install Ruby Gems, Run IVT
+        run: |
+          gem install bundler
+          BUNDLE_GEMFILE="./test/Gemfile" bundle install
+          curl -sL https://ibm.biz/idt-installer | bash
+          ibmcloud login --apikey $CLOUD_API_KEY -r us-east || { echo 'IBM Cloud CLI login failed!'; exit 1; }
+          ibmcloud plugin install event-streams
+          ibmcloud es init -i ${ES_INSTANCE}
+          ./run-ivttests.sh
+
+      - name: Post Slack Update
+        if: ${{ job.status == 'failure' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/support-') ) }}
+        id: slack
+        uses: slackapi/slack-github-action@v1.14.0
+        with:
+          payload: "{\"Repo\":\"${{ github.repository }}\",\"Workflow\":\"${{ github.workflow }}\",\"Branch\":\"${{ env.BRANCH_NAME }}\",\"Link\":\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
