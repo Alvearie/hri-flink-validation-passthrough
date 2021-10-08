@@ -41,7 +41,7 @@ jobs:
         run: ./gradlew publish
 
       - name: Post Slack Update
-        if: ${{ job.status == 'failure' }}
+        if: ${{ failure() }}
         id: slack
         uses: slackapi/slack-github-action@v1.14.0
         with:
