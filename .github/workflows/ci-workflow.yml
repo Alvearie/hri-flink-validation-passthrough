@@ -85,7 +85,7 @@ jobs:
           ./run-ivttests.sh
 
       - name: Post Slack Update
-        if: ${{ job.status == 'failure' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/support-') ) }}
+        if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/support-') ) }}
         id: slack
         uses: slackapi/slack-github-action@v1.14.0
         with:
