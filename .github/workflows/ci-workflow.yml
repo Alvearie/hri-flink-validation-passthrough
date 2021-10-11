@@ -76,6 +76,7 @@ jobs:
           bundler-cache: false
 
       - name: Install Ruby Gems, Run IVT
+        if: github.ref == 'refs/heads/never'
         run: |
           gem install bundler
           BUNDLE_GEMFILE="./test/Gemfile" bundle install
@@ -117,7 +118,7 @@ jobs:
             -H "Accept: application/json" \
             -H "Travis-API-Version: 3" \
             -H "Authorization: token ${TRAVIS_TOKEN}" \
-            -d '{"request": {"message":"Trigger build to: '${REPO_NAME}'", "branch":"'${BRANCH_NAME}'"}}' \
+            -d '{"request": {"message":"Trigger build to: '${VALIDATION_REPO_NAME}'", "branch":"'develop'"}}' \
               https://travis.ibm.com/api/repo/"${VALIDATION_REPO_OWNER}"%2F"${VALIDATION_REPO_NAME}"/requests
 
       - name: Post Slack Update
