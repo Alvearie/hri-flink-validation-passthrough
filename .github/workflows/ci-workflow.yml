@@ -105,6 +105,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew publish
 
+      - name: Trigger Validation Jar Build
+        if: github.ref == 'refs/heads/develop'
+        env:
+          TRAVIS_TOKEN: ${{ secrets.TRAVIS_TOKEN }}
+          VALIDATION_REPO_OWNER: ${{ secrets.VALIDATION_REPO_OWNER }}
+          VALIDATION_REPO_NAME: ${{ secrets.VALIDATION_REPO_NAME }}
+        run: |
+          curl -Sf -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -H "Travis-API-Version: 3" \
+            -H "Authorization: token ${TRAVIS_TOKEN}" \
+            -d '{"request": {"message":"Trigger build to: '${VALIDATION_REPO_NAME}'", "branch":"'develop'"}}' \
+              https://travis.ibm.com/api/repo/"${VALIDATION_REPO_OWNER}"%2F"${VALIDATION_REPO_NAME}"/requests
+
       - name: Post Slack Update
         if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/support-') ) }}
         id: slack
