@@ -35,7 +35,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           ./gradlew clean build
-          ./gradlew build sonarqube -Dsonar.login=$SONAR_TOKEN
           ./gradlew sonarqube -Dsonar.login=$SONAR_TOKEN --info
 
       - name: Post Slack Update

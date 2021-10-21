@@ -235,6 +235,9 @@ jacocoTestReport {
 jacocoTestReport.doLast {
     println "Jacoco report:\n  file:///$buildDir/reports/jacoco/test/html/index.html"
 }
+tasks.named('sonarqube').configure {
+    dependsOn test
+}
 
 
 /**
