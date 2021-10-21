@@ -218,6 +218,9 @@ test {
 }
 jacocoTestReport {
     dependsOn test // tests are required to run before generating the report
+    reports {
+        xml.enabled = true
+    }
 }
 jacocoTestReport.doLast {
     println "Jacoco report:\n  file:///$buildDir/reports/jacoco/test/html/index.html"
