@@ -139,7 +139,6 @@ sonarqube {
         property "sonar.organization", "alvearie"
         property "sonar.host.url", "https://sonarcloud.io"
         property "sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml,./build/reports/jacoco/test/jacocoTestReport.xml"
-        property 'sonar.core.codeCoveragePlugin', 'jacoco'
         property "sonar.sourceEncoding", "UTF-8"
     }
 }
@@ -236,8 +235,8 @@ jacocoTestReport {
 jacocoTestReport.doLast {
     println "Jacoco report:\n  file:///$buildDir/reports/jacoco/test/html/index.html"
 }
-tasks.named('sonarqube').configure {
-    dependsOn test
+plugins.withType(JacocoPlugin) {
+    tasks["test"].finalizedBy 'jacocoTestReport'
 }
 
 

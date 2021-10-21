@@ -34,7 +34,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          ./gradlew build sonarqube -Dsonar.login=$SONAR_TOKEN --info
+          ./gradlew build jacocoTestReport sonarqube -Dsonar.login=$SONAR_TOKEN --info
 
       - name: Post Slack Update
         if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/support-') ) }}
