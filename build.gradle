@@ -139,7 +139,7 @@ sonarqube {
         property "sonar.organization", "alvearie"
         property "sonar.host.url", "https://sonarcloud.io"
 
-        property "sonar.coverage.jacoco.xmlReportPaths", "./build/reports/jacoco/test/jacocoTestReport.xml"
+        property "sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
         property "sonar.sourceEncoding", "UTF-8"
     }
 }
