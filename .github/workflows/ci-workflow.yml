@@ -75,7 +75,7 @@ jobs:
           ruby-version: 2.6.5
           bundler-cache: false
 
-      - name: Install Ruby Gems, Run IVT
+      - name: Run Nightly Tests
         run: |
           gem install bundler
           BUNDLE_GEMFILE="./test/Gemfile" bundle install
@@ -84,47 +84,7 @@ jobs:
           ibmcloud login --apikey $CLOUD_API_KEY -r us-east || { echo 'IBM Cloud CLI login failed!'; exit 1; }
           ibmcloud plugin install event-streams
           ibmcloud es init -i ${ES_INSTANCE}
-          ./run-ivttests.sh
-
-      - name: Run Nightly Tests
-        if: github.ref == 'refs/heads/develop' && github.event_name == 'workflow_dispatch'
-        run: |
           ibmcloud ks cluster config --cluster hri-dev1-cluster-1
+          ./gradlew build publishToMavenLocal
           ./gradlew copyNightlyTestDependencies
           ./run-nightlytests.sh
-
-      - name: Upload Test Results
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-        run: |
-          ./test/spec/upload_test_reports.rb IVT
-          ./test/spec/upload_test_reports.rb Nightly
-
-      - name: Gradle Publish
-        if: ${{ github.ref == 'refs/heads/develop' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew publish
-
-      - name: Trigger Validation Jar Build
-        if: github.ref == 'refs/heads/develop'
-        env:
-          TRAVIS_TOKEN: ${{ secrets.TRAVIS_TOKEN }}
-          VALIDATION_REPO_OWNER: ${{ secrets.VALIDATION_REPO_OWNER }}
-          VALIDATION_REPO_NAME: ${{ secrets.VALIDATION_REPO_NAME }}
-        run: |
-          curl -Sf -X POST \
-            -H "Content-Type: application/json" \
-            -H "Accept: application/json" \
-            -H "Travis-API-Version: 3" \
-            -H "Authorization: token ${TRAVIS_TOKEN}" \
-            -d '{"request": {"message":"Trigger build to: '${VALIDATION_REPO_NAME}'", "branch":"'develop'"}}' \
-              https://travis.ibm.com/api/repo/"${VALIDATION_REPO_OWNER}"%2F"${VALIDATION_REPO_NAME}"/requests
-
-      - name: Post Slack Update
-        if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/support-') ) }}
-        id: slack
-        uses: slackapi/slack-github-action@v1.14.0
-        with:
-          payload: "{\"Repo\":\"${{ github.repository }}\",\"Workflow\":\"${{ github.workflow }}\",\"Branch\":\"${{ env.BRANCH_NAME }}\",\"Link\":\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
