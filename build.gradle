@@ -236,7 +236,6 @@ jacocoTestReport.doLast {
     println "Jacoco report:\n  file:///$buildDir/reports/jacoco/test/html/index.html"
 }
 
-
 /**
  * Get the name of the working branch of the project
  *
