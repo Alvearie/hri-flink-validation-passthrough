@@ -1,0 +1,45 @@
+name: Code Scans
+
+on:
+  push:
+    branches: [ 'main', 'develop', 'support-*' ]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency: code-scans-${{ github.ref }}
+
+jobs:
+  buildAndTest:
+    name: Static Code Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set branch name environment variable
+        uses: nelonoel/branch-name@v1.0.1
+
+      - uses: actions/checkout@v2
+        with:
+          # full checkout for SonarCloud analysis
+          fetch-depth: 0
+
+      - name: Set up Java 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+          cache: 'gradle'
+
+      - name: SonarCloud Scan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew clean build sonarqube -Dsonar.login=$SONAR_TOKEN
+
+      - name: Post Slack Update
+        if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/support-') ) }}
+        id: slack
+        uses: slackapi/slack-github-action@v1.14.0
+        with:
+          payload: "{\"Repo\":\"${{ github.repository }}\",\"Workflow\":\"${{ github.workflow }}\",\"Branch\":\"${{ env.BRANCH_NAME }}\",\"Link\":\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
