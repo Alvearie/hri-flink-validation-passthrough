@@ -14,5 +14,3 @@ pluginManagement {
 }
 
 rootProject.name = 'hri-flink-validation-passthrough'
-
-include 'test'
