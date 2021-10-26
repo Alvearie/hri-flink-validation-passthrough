@@ -20,7 +20,7 @@ plugins {
 
 allprojects {
     group = 'org.alvearie.hri.flink'
-    version = 'Alpha.Dev'
+    version = '3.1-1.0.3'
     description = """Flink Passthrough Validation Job"""
     applicationDefaultJvmArgs = ["-Dlog4j.configuration=log4j.properties"]
     mainClassName = 'org.alvearie.hri.flink.PassthroughStreamingJob'
@@ -28,7 +28,7 @@ allprojects {
     apply plugin: "org.sonatype.gradle.plugins.scan"
 
     ext {
-        pipelineCoreVersion = 'develop-SNAPSHOT'
+        pipelineCoreVersion = '3.1-1.0.3'
         javaVersion = '1.8'
         flinkVersion = '1.10.3'
         scalaBinaryVersion = '2.12'
