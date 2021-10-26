@@ -98,11 +98,5 @@
     - From within the top directory of this project, run the integration tests with:   
       ```rspec test/spec --tag ~@broken```
     
-      If you want to run the high availability tests, you must first run the following commands in the `hri-flink-validation-passthrough` repo:
-       ```bash
-          ./gradlew build publishToMavenLocal
-          ./gradlew copyNightlyTestDependencies
-       ```
-      Then run the tests with:
-    
+      You can use the following command to run the high availability tests:
       ```rspec test/nightly/flink_validation_high_availability_spec.rb --tag ~@broken```
