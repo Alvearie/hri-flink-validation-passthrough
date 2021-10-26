@@ -146,12 +146,6 @@ sonarqube {
     }
 }
 
-project(":test") {
-    sonarqube {
-        skipProject = true
-    }
-}
-
 // declare the dependencies for your production and test code
 dependencies {
     implementation "org.apache.flink:flink-scala_${scalaBinaryVersion}:${flinkVersion}"
