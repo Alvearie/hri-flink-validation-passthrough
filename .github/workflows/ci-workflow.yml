@@ -90,8 +90,6 @@ jobs:
         if: github.ref == 'refs/heads/fix-nightly'
         run: |
           ibmcloud ks cluster config --cluster hri-dev1-cluster-1
-          ./gradlew build publishToMavenLocal
-          ./gradlew copyNightlyTestDependencies
           ./run-nightlytests.sh
 
       - name: Upload Test Results

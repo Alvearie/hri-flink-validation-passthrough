@@ -47,7 +47,7 @@ describe 'Flink Validation Passthrough High Availability Job' do
     @kafka = Kafka.new(ENV['KAFKA_BROKERS'], client_id: "hri-flink-validation-passthrough-#{@git_branch}-#{timestamp}", connect_timeout: 10, socket_timeout: 10, sasl_plain_username: 'token', sasl_plain_password: ENV['SASL_PLAIN_PASSWORD'], ssl_ca_certs_from_system: true)
 
     #Upload Jar File
-    @test_jar_id = @flink_helper.upload_jar_from_dir('hri-flink-validation-passthrough-nightly-test-jar.jar', File.join(File.dirname(__FILE__), '../dependencies'), @flink_api_oauth_token, /hri-flink-validation-passthrough-.+.jar/)
+    @test_jar_id = @flink_helper.upload_jar_from_dir("hri-flink-validation-passthrough-#{@git_branch}.jar", File.join(File.dirname(__FILE__), '../../build/libs/'), @flink_api_oauth_token, /hri-flink-validation-passthrough-.+.jar/)
 
     #Start Job
     @flink_job = FlinkJob.new(@flink_helper, @event_streams_helper, @kafka, @test_jar_id, TENANT_ID)
