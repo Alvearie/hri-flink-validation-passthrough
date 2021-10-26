@@ -14,6 +14,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '5.2.0'
     id 'maven-publish'
     id 'jacoco'
+    id "org.sonarqube" version "3.3"
 }
 
 allprojects {
@@ -131,6 +132,17 @@ configurations {
     flinkShadowJar.exclude group: 'log4j'
 }
 
+sonarqube {
+    properties {
+        property "sonar.projectKey", "Alvearie_hri-flink-validation-passthrough"
+        property "sonar.organization", "alvearie"
+        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.exclusions", "./test/**"
+        property "sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+        property "sonar.sourceEncoding", "UTF-8"
+    }
+}
+
 // declare the dependencies for your production and test code
 dependencies {
     implementation "org.apache.flink:flink-scala_${scalaBinaryVersion}:${flinkVersion}"
@@ -216,6 +228,9 @@ test {
 }
 jacocoTestReport {
     dependsOn test // tests are required to run before generating the report
+    reports {
+        xml.enabled = true
+    }
 }
 jacocoTestReport.doLast {
     println "Jacoco report:\n  file:///$buildDir/reports/jacoco/test/html/index.html"
