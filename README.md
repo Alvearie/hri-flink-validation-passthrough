@@ -21,7 +21,7 @@ Note: This software uses Apache Flink (https://flink.apache.org/) for streaming 
 ### Building
 From the base directory, run `./gradlew clean build`. This will download dependencies and run all the unit tests. 
 
-This depends on the `flink-pipeline-core` [GitHub repo](https://github.com/Alvearie/hri-flink-pipeline-core) and its published packages.
+This depends on the `hri-flink-pipeline-core` [GitHub repo](https://github.com/Alvearie/hri-flink-pipeline-core) and its published packages.
 
 ```
 hri-flink-validation-passthrough % ./gradlew clean build
@@ -37,10 +37,10 @@ GitHub actions is used for CI/CD. It runs unit tests, builds the code, and then 
 
 Each branch uses its own topics, so different builds don't interfere with each other. Integration tests will clean up after themselves cancelling the Flink job, deleting the job jar, and the Event Streams topics.
 
-The Flink logs are available for trouble shooting. They can be viewed in the Flink UI or the Kubernetes logs. The logs for all jobs are combined together, so you may need to search to a specific time frame or look for specific keywords.
+The Flink logs are available for troubleshooting. They can be viewed in the Flink UI or the Kubernetes logs. The logs for all jobs are combined, so you may need to search to a specific time frame or look for specific keywords.
 
 ## Releases
-Releases are created by creating Git tags, which trigger a GitHub Actions build that publishes a release version in GitHub packages, see [Overall strategy](https://github.com/Alvearie/HRI/wiki/Overall-Project-Branching,-Test,-and-Release-Strategy) for more details.
+Releases are created by creating Git tags, which trigger a GitHub Actions build that publishes a release version in GitHub packages.
 
 ## Code Overview
 

@@ -1,0 +1,50 @@
+name: Release Workflow
+
+on:
+  push:
+    tags: [ '**' ]
+  workflow_dispatch:
+
+concurrency: release-${{ github.ref }}
+
+jobs:
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Set Branch Name
+        uses: nelonoel/branch-name@v1.0.1
+
+      - name: Set GitHub Tag environment variable
+        run: |
+          TAG_ID=${GITHUB_REF##*/}
+          echo "ACTIONS_TAG=$TAG_ID" >> $GITHUB_ENV
+
+      - name: Install Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt-hotspot'
+          java-version: '8'
+
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Copyright Check
+        run: ./copyrightCheck.sh
+
+      - name: Gradle Publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew publish
+
+      - name: Post Slack Update
+        if: ${{ failure() }}
+        id: slack
+        uses: slackapi/slack-github-action@v1.14.0
+        with:
+          payload: "{\"Repo\":\"${{ github.repository }}\",\"Workflow\":\"${{ github.workflow }}\",\"Branch\":\"${{ env.BRANCH_NAME }}\",\"Link\":\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

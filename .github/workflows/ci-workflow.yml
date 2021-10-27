@@ -1,0 +1,129 @@
+name: CI Workflow
+
+on:
+  push:
+    branches: [ '**' ]
+  workflow_dispatch:
+
+concurrency: ci-${{ github.ref }}
+
+jobs:
+
+  build-and-run-tests:
+    name: Build and Run Tests
+    runs-on: ubuntu-latest
+    env:
+      APPID_FLINK_AUDIENCE: a480b8ff-c7a2-4efd-948e-d0292fff8ffc
+      APPID_HRI_AUDIENCE: 21e7d376-9cdb-4a9d-a11f-9b76c007244d
+      APPID_TENANT: 0f389ea4-778e-4831-9b29-6156c4c1df1e
+      APPID_URL: https://us-east.appid.cloud.ibm.com
+      COS_URL: https://s3.us-east.cloud-object-storage.appdomain.cloud
+      ELASTIC_URL: https://c9acb36a-0feb-4b6e-aac1-6651c71d19e4.2adb0220806343e3ae11df79c89b377f.databases.appdomain.cloud:32085
+      ES_INSTANCE: hri-dev1-event-streams
+      HRI_SERVICE_URL: https://hri-mgmt-api/hri
+      IAM_CLOUD_URL: https://iam.cloud.ibm.com
+      INPUT_TOPIC: ingest.test.flink-validation-passthrough.in
+      INVALID_TOPIC: ingest.test.flink-validation-passthrough.invalid
+      KAFKA_BROKERS: broker-0-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-1-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-2-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-3-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-4-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093,broker-5-twvyj4m0kft5j0mh.kafka.svc01.us-east.eventstreams.cloud.ibm.com:9093
+      NAMESPACE: main
+      OIDC_HRI_DATA_INTEGRATOR_CLIENT_ID: e6ae020a-ff2a-4594-8337-0acfdf76f710
+      OIDC_HRI_INTERNAL_CLIENT_ID: e1284680-4edf-44d2-b65c-d63097906fae
+      OUTPUT_TOPIC: ingest.test.flink-validation-passthrough.out
+      NOTIFICATION_TOPIC: ingest.test.flink-validation-passthrough.notification
+
+      CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY }}
+      ELASTIC_PASSWORD: ${{ secrets.ELASTIC_PASSWORD }}
+      ELASTIC_USER: ${{ secrets.ELASTIC_USER }}
+      OIDC_HRI_DATA_INTEGRATOR_CLIENT_SECRET: ${{ secrets.OIDC_HRI_DATA_INTEGRATOR_CLIENT_SECRET }}
+      OIDC_HRI_INTERNAL_CLIENT_SECRET: ${{ secrets.OIDC_HRI_INTERNAL_CLIENT_SECRET }}
+      SASL_PLAIN_PASSWORD: ${{ secrets.SASL_PLAIN_PASSWORD }}
+
+    steps:
+      - name: Set Environment Variables
+        run: |
+          echo "FLINK_URL=https://flink-$NAMESPACE.wh-hri.dev.watson-health.ibm.com/v1" >> $GITHUB_ENV
+          echo "HRI_INGRESS_URL=https://mgmt-api-$NAMESPACE.wh-hri.dev.watson-health.ibm.com/hri" >> $GITHUB_ENV
+
+      - name: Set Branch Name
+        uses: nelonoel/branch-name@v1.0.1
+
+      - name: Install Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt-hotspot'
+          java-version: '8'
+
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Copyright Check
+        run: ./copyrightCheck.sh
+
+      - name: Gradle Build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./gradlew clean build shadowJar
+
+      - name: Run Smoke Tests
+        run: |
+          ./run-smoketests.sh
+
+      - name: Install Ruby 2.6.5
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.6.5
+          bundler-cache: false
+
+      - name: Install Ruby Gems, Run IVT
+        run: |
+          gem install bundler
+          BUNDLE_GEMFILE="./test/Gemfile" bundle install
+          gem specific_install -l https://github.com/Alvearie/hri-test-helpers.git main
+          curl -sL https://ibm.biz/idt-installer | bash
+          ibmcloud login --apikey $CLOUD_API_KEY -r us-east || { echo 'IBM Cloud CLI login failed!'; exit 1; }
+          ibmcloud plugin install event-streams
+          ibmcloud es init -i ${ES_INSTANCE}
+          ./run-ivttests.sh
+
+      - name: Run Nightly Tests
+        if: github.ref == 'refs/heads/develop' && github.event_name == 'workflow_dispatch'
+        run: |
+          ibmcloud ks cluster config --cluster hri-dev1-cluster-1
+          ./run-nightlytests.sh
+
+      - name: Upload Test Results
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+        run: |
+          ./test/spec/upload_test_reports.rb IVT
+          ./test/spec/upload_test_reports.rb Nightly
+
+      - name: Gradle Publish
+        if: ${{ github.ref == 'refs/heads/develop' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew publish
+
+      - name: Trigger Validation Jar Build
+        if: github.ref == 'refs/heads/develop'
+        env:
+          TRAVIS_TOKEN: ${{ secrets.TRAVIS_TOKEN }}
+          VALIDATION_REPO_OWNER: ${{ secrets.VALIDATION_REPO_OWNER }}
+          VALIDATION_REPO_NAME: ${{ secrets.VALIDATION_REPO_NAME }}
+        run: |
+          curl -Sf -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -H "Travis-API-Version: 3" \
+            -H "Authorization: token ${TRAVIS_TOKEN}" \
+            -d '{"request": {"message":"Trigger build to: '${VALIDATION_REPO_NAME}'", "branch":"'develop'"}}' \
+              https://travis.ibm.com/api/repo/"${VALIDATION_REPO_OWNER}"%2F"${VALIDATION_REPO_NAME}"/requests
+
+      - name: Post Slack Update
+        if: ${{ failure() && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/support-') ) }}
+        id: slack
+        uses: slackapi/slack-github-action@v1.14.0
+        with:
+          payload: "{\"Repo\":\"${{ github.repository }}\",\"Workflow\":\"${{ github.workflow }}\",\"Branch\":\"${{ env.BRANCH_NAME }}\",\"Link\":\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

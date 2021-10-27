@@ -1,4 +1,13 @@
 
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.sonatype.gradle.plugins:scan-gradle-plugin:2.2.0"
+    }
+}
+
 plugins {
     id 'java'
     id 'application'
@@ -6,24 +15,27 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '5.2.0'
     id 'maven-publish'
     id 'jacoco'
+    id "org.sonarqube" version "3.3"
 }
 
 allprojects {
     group = 'org.alvearie.hri.flink'
-    version = '3.0-1.0.2'
+    version = '3.1-1.0.3'
     description = """Flink Passthrough Validation Job"""
     applicationDefaultJvmArgs = ["-Dlog4j.configuration=log4j.properties"]
     mainClassName = 'org.alvearie.hri.flink.PassthroughStreamingJob'
 
+    apply plugin: "org.sonatype.gradle.plugins.scan"
+
     ext {
-        pipelineCoreVersion = '3.0-1.0.2'
+        pipelineCoreVersion = '3.1-1.0.3'
         javaVersion = '1.8'
-        flinkVersion = '1.10.0'
+        flinkVersion = '1.10.3'
         scalaBinaryVersion = '2.12'
         scalaVersion = '2.12.11'
         scalaTestVersion = '3.1.1'
         slf4jVersion = '1.7.7'
-        log4jVersion = '1.2.17'
+        log4jVersion = '2.13.2'
         jacksonVersion = '2.12.0'
     }
 
@@ -34,35 +46,77 @@ allprojects {
     }
 
     repositories {
-        ['TBD'].each { repo ->
-            maven {
-                credentials {
-                    username = findProperty('user') ?: System.getenv('user')
-                    password = findProperty('password') ?: System.getenv('password')
-                }
-
-                url "TBD/$repo/"
+        maven {
+            credentials {
+                username = findProperty('GITHUB_ACTOR') ?: System.getenv('GITHUB_ACTOR')
+                password = findProperty('GITHUB_TOKEN') ?: System.getenv('GITHUB_TOKEN')
             }
+
+            url "https://maven.pkg.github.com/Alvearie/hri-flink-pipeline-core"
         }
         mavenCentral()
         mavenLocal()
     }
 
     ext {
-        branch = System.getenv('TRAVIS_BRANCH') != null
-                ? System.getenv('TRAVIS_BRANCH')
+        branch = System.getenv('BRANCH_NAME') != null
+                ? System.getenv('BRANCH_NAME')
                 : getWorkingBranch()
+
+        ossPassword = findProperty("SONATYPE_OSS_PASSWORD") ?: System.getenv("SONATYPE_OSS_PASSWORD")
     }
 
-    // If not running in travis add 'local' to the version to support local development
-    if (System.getenv('TRAVIS_BRANCH') == null || System.getenv('TRAVIS_BRANCH') == "") {
+    // If not running in Actions add 'local' to the version to support local development
+    if (System.getenv('BRANCH_NAME') == null || System.getenv('BRANCH_NAME') == "") {
         version = "${branch}-local-SNAPSHOT"
-    } else if (System.getenv('TRAVIS_TAG') == null || System.getenv('TRAVIS_TAG') == "") {
+    } else if (System.getenv('ACTIONS_TAG') == null || System.getenv('ACTIONS_TAG') == "") {
         version = "${branch}-SNAPSHOT"
-    } else if (System.getenv('TRAVIS_TAG') == "v${version}") {
+    } else if (System.getenv('ACTIONS_TAG') == "v${version}") {
         version = "${version}"
     } else {
-        throw new InvalidUserDataException(String.format("The tag '%s' does not match with the current release version '%s'",System.getenv('TRAVIS_TAG'),"${version}"));
+        throw new InvalidUserDataException(String.format("The tag '%s' does not match with the current release version '%s'",System.getenv('ACTIONS_TAG'),"${version}"));
+    }
+
+    ossIndexAudit {
+        username = 'hribld@us.ibm.com'
+        password = "${ossPassword}"
+        allConfigurations = true // if true includes the dependencies in all resolvable configurations. By default is false, meaning only 'compileClasspath', 'runtimeClasspath', 'releaseCompileClasspath' and 'releaseRuntimeClasspath' are considered
+        useCache = true // true by default
+        cacheExpiration = 'PT86400S' // note: time in seconds (24hrs); 12 hours if omitted. It must follow the Joda Time specification at https://www.javadoc.io/doc/joda-time/joda-time/2.10.4/org/joda/time/Duration.html#parse-java.lang.String-
+        colorEnabled = true // if true prints vulnerability description in color. By default is true.
+        printBanner = true // if true will print ASCII text banner. By default is true.
+
+        // Vulnerabilities that can safely be ignored
+        excludeVulnerabilityIds = [
+                // pkg:maven/org.apache.zookeeper/zookeeper@3.4.8 (from flink-test-utils)
+                '1775f19b-5e9c-48f8-8c8f-ef245350531b', '43b8cbe5-324d-416b-b613-3dcaba1b5a6c', 'bec057e0-9945-49c4-92c9-4be669bb5331', '1e65ed27-7a06-4464-a115-c8421c879281',
+
+                // pkg:maven/io.netty/netty@3.7.0.Final (from flink-test-utils)
+                '20be5124-16a3-4d77-8668-d83f04a67808', '20167979-f872-4765-85ef-9b7be870cecb', 'f2a31abe-1af6-4f6f-aeeb-60e0e0d3e981', '6ff63cbd-c4ae-4268-be95-43322746b6be',
+                '8b7d8928-61ee-4708-bf37-feece927a872', 'cbde3175-9c07-491c-836d-2a146b61e3b6', '846fbf13-a0b9-4cab-b820-8415a30326bd', 'b3c3a56f-37c0-4706-bf54-2f61c5c9786f',
+                'a3df5795-2bdb-4ec6-b9c2-babe9ec470e5', '20b79835-7a43-4bea-a985-5e12df1d0b0a',
+                // pkg:maven/io.netty/netty@3.7.0.Final (from Snappy and Bzip2 compression components.  Can’t force Flink to upgrade, and not used in Flink.)
+                '14ed6543-1974-4241-b353-3afd846eadc9', '99b9cf63-0f91-43fb-b227-e53917370ed9',
+
+                // pkg:maven/com.google.guava/guava@16.0.1 (from flink-test-utils)
+                '24585a7f-eb6b-4d8d-a2a9-a6f16cc7c1d0', '8e973be2-4220-410d-a4cb-2de7a755bdbe',
+
+                // pkg:maven/junit/junit@4.12 (from flink-test-utils)
+                '7ea56ad4-8a8b-4e51-8ed9-5aad83d8efb1',
+
+                //pkg:maven/org.apache.commons/commons-compress@1.18 (from org.apache.flink:flink-scala_2.12:1.10.3)
+                //NOTE: these vulnerabilities cannot be eliminated UNTIL we upgrade our Flink version to Flink 1.14.0
+                //Need to get Security Exception until that happens
+                '68232267-bb25-4b04-8dec-caf7c11c7293', '69b8043a-3002-48fa-9762-8f6040d83de1', '4102317d-8250-465e-a46d-179d42792b14',
+                '7a6a9dd2-67de-4e2a-b406-7aa4a4ce29cc', '8ea14e38-e6cc-48d9-bfe4-ec89f93596e7',
+
+                //pkg:maven/org.apache.logging.log4j/log4j-core@2.11.2 (from org.scala-sbt:zinc_2.12:1.3.5 - Used by gradle scala plugin only)
+                'd3477f9c-032a-44a7-a5e1-02ae35e4737c',
+
+                //pkg:maven/log4j/log4j@1.2.17 (from com.vladsch.flexmark:flexmark-all:0.35.10 - Used in Unit Test runs only)
+                'e6e4ebea-da12-4bde-8f24-6272925ad093'
+        ]
+        // excludeCoordinates = ['commons-fileupload:commons-fileupload:1.3'] // list containing coordinate of components which if vulnerable should be ignored
     }
 }
 
@@ -75,18 +129,35 @@ configurations {
 
     // always exclude these (also from transitive dependencies) since they are provided by Flink
     flinkShadowJar.exclude group: 'org.apache.flink', module: 'force-shading'
+    flinkShadowJar.exclude group: 'org.scala-lang', module: 'scala-compiler'
     flinkShadowJar.exclude group: 'com.google.code.findbugs', module: 'jsr305'
     flinkShadowJar.exclude group: 'org.slf4j'
     flinkShadowJar.exclude group: 'log4j'
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "Alvearie_hri-flink-validation-passthrough"
+        property "sonar.organization", "alvearie"
+        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.exclusions", "./test/**"
+        property "sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+        property "sonar.sourceEncoding", "UTF-8"
+    }
 }
 
 // declare the dependencies for your production and test code
 dependencies {
     implementation "org.apache.flink:flink-scala_${scalaBinaryVersion}:${flinkVersion}"
     implementation "org.apache.flink:flink-streaming-scala_${scalaBinaryVersion}:${flinkVersion}"
+    implementation("org.scala-lang:scala-compiler") {
+        version {
+            require("${scalaVersion}")
+        }
+    }
     implementation "org.apache.flink:flink-tests:${flinkVersion}:tests"
     implementation "org.apache.flink:flink-test-utils_${scalaBinaryVersion}:${flinkVersion}"
-    implementation "log4j:log4j:${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     implementation "org.slf4j:slf4j-log4j12:${slf4jVersion}"
 
     // --------------------------------------------------------------
@@ -140,10 +211,10 @@ publishing {
 
     repositories {
         maven {
-            url 'TBD'
+            url 'https://maven.pkg.github.com/Alvearie/hri-flink-validation-passthrough'
             credentials {
-                username findProperty('user') ?: ''
-                password findProperty('password') ?: ''
+                username findProperty('GITHUB_ACTOR') ?: System.getenv('GITHUB_ACTOR')
+                password findProperty('GITHUB_TOKEN') ?: System.getenv('GITHUB_TOKEN')
             }
         }
     }
@@ -160,11 +231,13 @@ test {
 }
 jacocoTestReport {
     dependsOn test // tests are required to run before generating the report
+    reports {
+        xml.enabled = true
+    }
 }
 jacocoTestReport.doLast {
     println "Jacoco report:\n  file:///$buildDir/reports/jacoco/test/html/index.html"
 }
-
 
 /**
  * Get the name of the working branch of the project

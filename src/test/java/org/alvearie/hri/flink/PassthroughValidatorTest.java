@@ -10,7 +10,6 @@ import org.alvearie.hri.flink.core.serialization.HriRecord;
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.junit.Test;
 import scala.Tuple2;
-import scala.Tuple22;
 import scala.runtime.RichBoolean;
 
 import java.nio.charset.StandardCharsets;
