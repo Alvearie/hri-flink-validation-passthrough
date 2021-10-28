@@ -30,7 +30,7 @@ allprojects {
     ext {
         pipelineCoreVersion = 'develop-SNAPSHOT'
         javaVersion = '1.8'
-        flinkVersion = '1.10.3'
+        flinkVersion = '1.14.0'
         scalaBinaryVersion = '2.12'
         scalaVersion = '2.12.11'
         scalaTestVersion = '3.1.1'
