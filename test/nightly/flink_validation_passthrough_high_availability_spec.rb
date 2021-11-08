@@ -180,41 +180,4 @@ describe 'Flink Validation Passthrough High Availability Job' do
     @record_validator.all_notification_records(@kafka_notification_consumer, @notification_topic, @batch_id, %w(started sendCompleted completed))
   end
 
-  it 'should output all successfully validated records with the same key, headers, and body after deleting a zookeeper pod' do
-    expected_record_count = {
-      expectedRecordCount: 15
-    }
-    batch_template = {
-      name: "hri-flink-validation-passthrough-#{@git_branch}-valid-batch-name",
-      dataType: 'hri-flink-validation-passthrough-batch',
-      topic: @input_topic
-    }
-    @batch_id = @mgmt_api_helper.create_batch(TENANT_ID, batch_template, @hri_oauth_token)
-
-    key = 1
-    File.readlines(File.join(File.dirname(__FILE__), "../test_data/mixed_records.txt")).each do |line|
-      @flink_job.kafka_producer.produce(line, key: "#{key}", topic: @input_topic, headers: {batchId: @batch_id})
-      @flink_job.kafka_producer.deliver_messages
-      if key == 10
-        zookeeper_pod = @request_helper.exec_command("kubectl get pods -n #{@namespace}")[:stdout].split("\n").select { |s| s.include?('zookeeper') }[0].split(' ')[0]
-        @request_helper.exec_command("kubectl delete pod #{zookeeper_pod} -n #{@namespace}")
-        Logger.new(STDOUT).info("Deleted zookeeper pod: #{zookeeper_pod}")
-        Timeout.timeout(15, nil, 'Zookeeper pod not reinitializing after 15 seconds') do
-          while true
-            break unless @request_helper.exec_command("kubectl get pods -n #{@namespace}")[:stdout].split("\n").select { |s| s.include?(zookeeper_pod) && s.include?('Init') }.empty?
-          end
-        end
-      end
-      key += 1
-    end
-    Logger.new(STDOUT).info("Test messages sent to the #{@input_topic} topic")
-
-    @record_validator.all_output_records(@kafka_output_consumer, @output_topic, @batch_id, key - 1, true, 120)
-
-    response = @mgmt_api_helper.hri_put_batch(TENANT_ID, @batch_id, 'sendComplete', expected_record_count, {'Authorization' => "Bearer #{@hri_oauth_token}"})
-    raise "Failed to update the status of batch ID #{@batch_id} to sendCompleted" unless response.code == 200
-
-    @record_validator.all_notification_records(@kafka_notification_consumer, @notification_topic, @batch_id, %w(started sendCompleted completed))
-  end
-
 end

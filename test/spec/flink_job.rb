@@ -35,9 +35,6 @@ class FlinkJob
     @flink_helper.verify_job_state(@job_id, flink_oauth_token, 'RUNNING')
     @job_started = true
 
-    # wait for the job to completely start up, otherwise it will miss some of the initial messages.
-    sleep(5)
-
     @flink_monitor_thread = Thread.new {
       Thread.current.abort_on_exception = false
       Thread.current.report_on_exception = false
