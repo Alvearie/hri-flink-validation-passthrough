@@ -11,7 +11,7 @@ require_relative '../env'
 #
 # The 'ivttest.xml' and 'nightlytest.xml' JUnit reports are uploaded to the 'wh-hri-dev1-allure-reports' Cloud Object Storage bucket,
 # which is also mounted on the 'allure' kubernetes pod. This bucket keeps the latest test report that will be used to generate a
-# # test dashboard when the allure executable is invoked on the pod.
+# test dashboard when the allure executable is invoked on the pod.
 
 cos_helper = HRITestHelpers::COSHelper.new(ENV['COS_URL'], ENV['IAM_CLOUD_URL'], ENV['CLOUD_API_KEY'])
 logger = Logger.new(STDOUT)
