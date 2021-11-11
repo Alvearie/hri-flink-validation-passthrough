@@ -2,7 +2,7 @@ name: Code Scans
 
 on:
   push:
-    branches: [ 'main', 'develop', 'support-*', 'WHFHRI-739' ]
+    branches: [ 'main', 'develop', 'support-*' ]
   pull_request:
     types: [opened, synchronize, reopened]
 
