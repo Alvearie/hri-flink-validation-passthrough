@@ -50,7 +50,7 @@ jobs:
       - name: Install Java
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt-hotspot'
+          distribution: 'temurin'
           java-version: '8'
 
       - name: Checkout Code
