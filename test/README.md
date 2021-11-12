@@ -44,7 +44,7 @@
 8. (Optional) To run tests locally, export these environment variables. Most of the values can be found in `.github/workflows/ci-workflow.yml`, with exceptions noted below.
     - Export these environment variables:
         * KAFKA_BROKERS
-        * ELASTIC_UR
+        * ELASTIC_URL
         * ELASTIC_USER
         * ELASTIC_PASSWORD - password for your ElasticSearch instance service credential.
         * CLOUD_API_KEY - found in your password manager
