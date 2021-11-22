@@ -50,7 +50,7 @@ jobs:
       - name: Install Java
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt-hotspot'
+          distribution: 'temurin'
           java-version: '8'
 
       - name: Checkout Code
@@ -93,7 +93,7 @@ jobs:
           ./run-nightlytests.sh
 
       - name: Upload Test Results
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+        if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
         run: |
           ./test/spec/upload_test_reports.rb IVT
           ./test/spec/upload_test_reports.rb Nightly
