@@ -87,7 +87,7 @@ jobs:
           ./run-ivttests.sh
 
       - name: Run Nightly Tests
-        if: github.ref == 'refs/heads/develop' && github.event_name == 'workflow_dispatch'
+        #if: github.ref == 'refs/heads/develop' && github.event_name == 'workflow_dispatch'
         run: |
           ibmcloud ks cluster config --cluster hri-dev1-cluster-1
           ./run-nightlytests.sh
