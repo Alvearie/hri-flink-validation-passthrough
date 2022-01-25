@@ -157,7 +157,7 @@ describe 'Flink Validation Passthrough High Availability Job' do
     Logger.new(STDOUT).info("Test messages sent to the #{@input_topic} topic")
 
     jar_found = false
-    Timeout.timeout(60, nil, 'Flink did not return a list of jars after 60 seconds') do
+    Timeout.timeout(90, nil, 'Flink did not return a list of jars after 90 seconds') do
       while true
         @response = @flink_helper.get_jars({'Authorization' => "Bearer #{@flink_api_oauth_token}"})
         break if @response.code == 200

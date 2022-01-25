@@ -20,7 +20,7 @@ plugins {
 
 allprojects {
     group = 'org.alvearie.hri.flink'
-    version = '3.2-1.1.0'
+    version = '3.2-1.1.1'
     description = """Flink Passthrough Validation Job"""
     applicationDefaultJvmArgs = ["-Dlog4j.configuration=log4j.properties"]
     mainClassName = 'org.alvearie.hri.flink.PassthroughStreamingJob'
@@ -28,14 +28,14 @@ allprojects {
     apply plugin: "org.sonatype.gradle.plugins.scan"
 
     ext {
-        pipelineCoreVersion = '3.2-1.1.0'
+        pipelineCoreVersion = '3.2-1.1.1'
         javaVersion = '1.8'
-        flinkVersion = '1.14.0'
+        flinkVersion = '1.14.3'
         scalaBinaryVersion = '2.12'
         scalaVersion = '2.12.11'
         scalaTestVersion = '3.1.1'
-        slf4jVersion = '1.7.7'
-        log4jVersion = '2.13.2'
+        slf4jVersion = '1.7.35'
+        log4jVersion = '2.17.1'
         jacksonVersion = '2.12.0'
     }
 
@@ -94,7 +94,7 @@ allprojects {
                 // pkg:maven/io.netty/netty@3.7.0.Final (from flink-test-utils)
                 '20be5124-16a3-4d77-8668-d83f04a67808', '20167979-f872-4765-85ef-9b7be870cecb', 'f2a31abe-1af6-4f6f-aeeb-60e0e0d3e981', '6ff63cbd-c4ae-4268-be95-43322746b6be',
                 '8b7d8928-61ee-4708-bf37-feece927a872', 'cbde3175-9c07-491c-836d-2a146b61e3b6', '846fbf13-a0b9-4cab-b820-8415a30326bd', 'b3c3a56f-37c0-4706-bf54-2f61c5c9786f',
-                'a3df5795-2bdb-4ec6-b9c2-babe9ec470e5', '20b79835-7a43-4bea-a985-5e12df1d0b0a',
+                'a3df5795-2bdb-4ec6-b9c2-babe9ec470e5', '20b79835-7a43-4bea-a985-5e12df1d0b0a', 'b6a1cffe-6f90-4b44-ad18-df9dc7dc6fc4',
                 // pkg:maven/io.netty/netty@3.7.0.Final (from Snappy and Bzip2 compression components.  Can’t force Flink to upgrade, and not used in Flink.)
                 '14ed6543-1974-4241-b353-3afd846eadc9', '99b9cf63-0f91-43fb-b227-e53917370ed9',
 
@@ -108,7 +108,10 @@ allprojects {
                 'd3477f9c-032a-44a7-a5e1-02ae35e4737c',
 
                 //pkg:maven/log4j/log4j@1.2.17 (from com.vladsch.flexmark:flexmark-all:0.35.10 - Used in Unit Test runs only)
-                'e6e4ebea-da12-4bde-8f24-6272925ad093'
+                'e6e4ebea-da12-4bde-8f24-6272925ad093',
+
+                //pkg:maven/log4j/log4j@1.2.16 (from flink-test-utils)
+                '4a7955ac-037c-42bc-a83e-b51efe2490af'
         ]
         // excludeCoordinates = ['commons-fileupload:commons-fileupload:1.3'] // list containing coordinate of components which if vulnerable should be ignored
     }
@@ -149,8 +152,8 @@ dependencies {
             require("${scalaVersion}")
         }
     }
-    implementation "org.apache.flink:flink-tests:${flinkVersion}:tests"
-    implementation "org.apache.flink:flink-test-utils_${scalaBinaryVersion}:${flinkVersion}"
+    testImplementation "org.apache.flink:flink-tests:${flinkVersion}:tests"
+    testImplementation "org.apache.flink:flink-test-utils_${scalaBinaryVersion}:${flinkVersion}"
     implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     implementation "org.slf4j:slf4j-log4j12:${slf4jVersion}"
 
