@@ -161,6 +161,7 @@ describe 'Flink Validation Passthrough High Availability Job' do
       while true
         @response = @flink_helper.get_jars({'Authorization' => "Bearer #{@flink_api_oauth_token}"})
         break if @response.code == 200
+        sleep 10
       end
     end
     parsed_response = JSON.parse(@response.body)
