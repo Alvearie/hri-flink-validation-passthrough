@@ -11,7 +11,7 @@ describe 'Flink Validation Passthrough Job' do
     BATCH_COMPLETION_DELAY = 5000
     @git_branch = ENV['BRANCH_NAME']
     @flink_helper = HRITestHelpers::FlinkHelper.new(ENV['FLINK_URL'])
-    @event_streams_helper = HRITestHelpers::EventStreamsHelper.new
+    @event_streams_api_helper = HRITestHelpers::EventStreamsAPIHelper.new(ENV['ES_ADMIN_URL'], ENV['ES_API_KEY'])
     @iam_token = HRITestHelpers::IAMHelper.new(ENV['IAM_CLOUD_URL']).get_access_token(ENV['CLOUD_API_KEY'])
     @appid_helper = HRITestHelpers::AppIDHelper.new(ENV['APPID_URL'], ENV['APPID_TENANT'], @iam_token, nil)
     @flink_api_oauth_token = @appid_helper.get_access_token('hri_integration_tenant_test_data_integrator', '', ENV['APPID_FLINK_AUDIENCE'])
@@ -25,11 +25,11 @@ describe 'Flink Validation Passthrough Job' do
     @output_topic = ENV['OUTPUT_TOPIC'].gsub('.out', "-#{@git_branch}-#{timestamp}.out")
     @notification_topic = ENV['NOTIFICATION_TOPIC'].gsub('.notification', "-#{@git_branch}-#{timestamp}.notification")
     @invalid_topic = ENV['INVALID_TOPIC'].gsub('.invalid', "-#{@git_branch}-#{timestamp}.invalid")
-    @event_streams_helper.create_topic(@input_topic, 1)
-    @event_streams_helper.create_topic(@output_topic, 1)
-    @event_streams_helper.create_topic(@notification_topic, 1)
-    @event_streams_helper.create_topic(@invalid_topic, 1)
-    @event_streams_helper.verify_topic_creation([@input_topic, @output_topic, @notification_topic, @invalid_topic])
+    @event_streams_api_helper.create_topic(@input_topic, 1)
+    @event_streams_api_helper.create_topic(@output_topic, 1)
+    @event_streams_api_helper.create_topic(@notification_topic, 1)
+    @event_streams_api_helper.create_topic(@invalid_topic, 1)
+    @event_streams_api_helper.verify_topic_creation([@input_topic, @output_topic, @notification_topic, @invalid_topic])
 
     @kafka_notification_builder = KafkaNotificationBuilder.new
     @output_consumer_group = "hri-flink-validation-passthrough-#{@git_branch}-#{timestamp}-output-consumer"
@@ -41,7 +41,7 @@ describe 'Flink Validation Passthrough Job' do
     @test_jar_id = @flink_helper.upload_jar_from_dir("hri-flink-validation-passthrough-#{@git_branch}.jar", File.join(File.dirname(__FILE__), '../../build/libs/'), @flink_api_oauth_token, /hri-flink-validation-passthrough-.+.jar/)
 
     #Start Job
-    @flink_job = FlinkJob.new(@flink_helper, @event_streams_helper, @kafka, @test_jar_id, TENANT_ID)
+    @flink_job = FlinkJob.new(@flink_helper, @event_streams_api_helper, @kafka, @test_jar_id, TENANT_ID)
     @flink_job.start_job(@flink_api_oauth_token, BATCH_COMPLETION_DELAY, @input_topic)
   end
 
@@ -54,13 +54,13 @@ describe 'Flink Validation Passthrough Job' do
     @kafka_invalid_consumer = @kafka.consumer(group_id: @invalid_consumer_group, offset_commit_threshold: 1)
     @kafka_invalid_consumer.subscribe(@invalid_topic)
 
-    consumer_groups = @event_streams_helper.get_groups
-    @event_streams_helper.reset_consumer_group(consumer_groups, @output_consumer_group, @output_topic, 'latest')
-    @event_streams_helper.reset_consumer_group(consumer_groups, @notification_consumer_group, @notification_topic, 'latest')
-    @event_streams_helper.reset_consumer_group(consumer_groups, @invalid_consumer_group, @invalid_topic, 'latest')
-    @event_streams_helper.reset_consumer_group(consumer_groups, "hri-validation-#{@input_topic}-#{@output_topic}", @input_topic, 'latest')
-    @event_streams_helper.reset_consumer_group(consumer_groups, "hri-validation-#{@input_topic}-#{@output_topic}", @notification_topic, 'latest')
-    @event_streams_helper.reset_consumer_group(consumer_groups, "hri-validation-#{@input_topic}-#{@output_topic}", @invalid_topic, 'latest')
+    consumer_groups = @event_streams_api_helper.get_groups
+    @event_streams_api_helper.reset_consumer_group(consumer_groups, @output_consumer_group, @output_topic, 'latest')
+    @event_streams_api_helper.reset_consumer_group(consumer_groups, @notification_consumer_group, @notification_topic, 'latest')
+    @event_streams_api_helper.reset_consumer_group(consumer_groups, @invalid_consumer_group, @invalid_topic, 'latest')
+    @event_streams_api_helper.reset_consumer_group(consumer_groups, "hri-validation-#{@input_topic}-#{@output_topic}", @input_topic, 'latest')
+    @event_streams_api_helper.reset_consumer_group(consumer_groups, "hri-validation-#{@input_topic}-#{@output_topic}", @notification_topic, 'latest')
+    @event_streams_api_helper.reset_consumer_group(consumer_groups, "hri-validation-#{@input_topic}-#{@output_topic}", @invalid_topic, 'latest')
   end
 
   after(:each) do
@@ -89,10 +89,10 @@ describe 'Flink Validation Passthrough Job' do
       response.nil? ? (raise 'Elastic batch delete did not return a response') : (raise 'Failed to delete Elastic batches' unless response.code == 200)
       Logger.new(STDOUT).info("Delete test batches by query response #{response.body}")
     ensure
-      @event_streams_helper.delete_topic(@input_topic)
-      @event_streams_helper.delete_topic(@output_topic)
-      @event_streams_helper.delete_topic(@notification_topic)
-      @event_streams_helper.delete_topic(@invalid_topic)
+      @event_streams_api_helper.delete_topic(@input_topic)
+      @event_streams_api_helper.delete_topic(@output_topic)
+      @event_streams_api_helper.delete_topic(@notification_topic)
+      @event_streams_api_helper.delete_topic(@invalid_topic)
     end
   end
 
@@ -236,7 +236,7 @@ describe 'Flink Validation Passthrough Job' do
 
     key = 1
     records_before_terminate = 10
-    offset = (@event_streams_helper.consumer_group_current_offset("hri-validation-#{@input_topic}-#{@output_topic}", @input_topic) || 0)
+    offset = (@event_streams_api_helper.consumer_group_current_offset("hri-validation-#{@input_topic}-#{@output_topic}", @input_topic) || 0)
     File.readlines(File.join(File.dirname(__FILE__), "../test_data/mixed_records.txt")).each do |line|
       if key <= records_before_terminate
         @flink_job.kafka_producer.produce(line, key: "#{key}", topic: @input_topic, headers: {batchId: @batch_id})
@@ -244,7 +244,7 @@ describe 'Flink Validation Passthrough Job' do
       else
         Timeout.timeout(15, nil, "Offset mismatch with consumer group: hri-validation-#{@input_topic}-#{@output_topic}") do
           while true
-            current_offset = @event_streams_helper.consumer_group_current_offset("hri-validation-#{@input_topic}-#{@output_topic}", @input_topic)
+            current_offset = @event_streams_api_helper.consumer_group_current_offset("hri-validation-#{@input_topic}-#{@output_topic}", @input_topic)
             break if offset + records_before_terminate == current_offset
           end
         end
