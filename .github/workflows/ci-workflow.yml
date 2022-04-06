@@ -20,6 +20,7 @@ jobs:
       COS_URL: https://s3.us-east.cloud-object-storage.appdomain.cloud
       ELASTIC_URL: https://c9acb36a-0feb-4b6e-aac1-6651c71d19e4.2adb0220806343e3ae11df79c89b377f.databases.appdomain.cloud:32085
       ES_INSTANCE: hri-dev1-event-streams
+      ES_ADMIN_URL: https://twvyj4m0kft5j0mh.svc01.us-east.eventstreams.cloud.ibm.com
       HRI_SERVICE_URL: https://hri-mgmt-api/hri
       IAM_CLOUD_URL: https://iam.cloud.ibm.com
       INPUT_TOPIC: ingest.test.flink-validation-passthrough.in
@@ -34,6 +35,7 @@ jobs:
       CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY }}
       ELASTIC_PASSWORD: ${{ secrets.ELASTIC_PASSWORD }}
       ELASTIC_USER: ${{ secrets.ELASTIC_USER }}
+      ES_API_KEY: ${{ secrets.ES_API_KEY }}
       OIDC_HRI_DATA_INTEGRATOR_CLIENT_SECRET: ${{ secrets.OIDC_HRI_DATA_INTEGRATOR_CLIENT_SECRET }}
       OIDC_HRI_INTERNAL_CLIENT_SECRET: ${{ secrets.OIDC_HRI_INTERNAL_CLIENT_SECRET }}
       SASL_PLAIN_PASSWORD: ${{ secrets.SASL_PLAIN_PASSWORD }}
