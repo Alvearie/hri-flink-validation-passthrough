@@ -9,9 +9,9 @@ class FlinkJob
   @@total_jobs = 0
   @@total_batches = 0
 
-  def initialize(flink_helper, event_streams_helper, kafka_helper, validation_jar_id, tenant)
+  def initialize(flink_helper, event_streams_api_helper, kafka_helper, validation_jar_id, tenant)
     @flink_helper = flink_helper
-    @event_streams_helper = event_streams_helper
+    @event_streams_api_helper = event_streams_api_helper
     @kafka_helper = kafka_helper
     @validation_jar_id = validation_jar_id
     @tenant = tenant
