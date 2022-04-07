@@ -11,7 +11,7 @@ describe 'Flink Validation Passthrough Job' do
     BATCH_COMPLETION_DELAY = 5000
     @git_branch = ENV['BRANCH_NAME']
     @flink_helper = HRITestHelpers::FlinkHelper.new(ENV['FLINK_URL'])
-    @event_streams_api_helper = HRITestHelpers::EventStreamsAPIHelper.new(ENV['ES_ADMIN_URL'], ENV['ES_API_KEY'])
+    @event_streams_api_helper = HRITestHelpers::EventStreamsAPIHelper.new(ENV['ES_ADMIN_URL'], ENV['CLOUD_API_KEY'])
     @iam_token = HRITestHelpers::IAMHelper.new(ENV['IAM_CLOUD_URL']).get_access_token(ENV['CLOUD_API_KEY'])
     @appid_helper = HRITestHelpers::AppIDHelper.new(ENV['APPID_URL'], ENV['APPID_TENANT'], @iam_token, nil)
     @flink_api_oauth_token = @appid_helper.get_access_token('hri_integration_tenant_test_data_integrator', '', ENV['APPID_FLINK_AUDIENCE'])
